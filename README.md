@@ -1,6 +1,3 @@
-# StackUndderflow 
-Trabalho da disciplina de Desenvolvimento de Software para Web, implementando fórum de perguntas e respostas inspirado no StackOverflow.
-
 # StackUnderflow
 
 Trabalho da disciplina de Desenvolvimento de Software para Web, implementando um fórum de perguntas e respostas inspirado no Stack Overflow.
