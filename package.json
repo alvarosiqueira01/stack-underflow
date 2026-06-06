@@ -1,0 +1,26 @@
+{
+  "name": "stack-underflow",
+  "version": "1.0.0",
+  "description": "Trabalho da disciplina de Desenvolvimento de Software para Web CK0207 2026.1",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alvarosiqueira01/stack-underflow.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/alvarosiqueira01/stack-underflow/issues"
+  },
+  "homepage": "https://github.com/alvarosiqueira01/stack-underflow#readme"
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
