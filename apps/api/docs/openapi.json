@@ -1,0 +1,1724 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "StackUnderflow API",
+    "version": "1.0.0",
+    "description": "Community Q&A platform API inspired by Stack Overflow."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local Development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Users"
+    },
+    {
+      "name": "Questions"
+    },
+    {
+      "name": "Answers"
+    },
+    {
+      "name": "Reviews"
+    },
+    {
+      "name": "Tags"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token. Example: Bearer eyJhbGciOiJIUzI1NiIs..."
+      }
+    },
+    "schemas": {
+      "BadRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Validation failed."
+              },
+              "code": {
+                "type": "integer",
+                "example": 400
+              }
+            }
+          }
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Human-readable description of the error.",
+            "example": "An unexpected error occurred."
+          },
+          "code": {
+            "type": "integer",
+            "description": "HTTP status code mirrored inside the response body.",
+            "example": 400
+          }
+        },
+        "required": [
+          "message",
+          "code"
+        ]
+      },
+      "Unauthorized": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Authentication is required."
+              },
+              "code": {
+                "type": "integer",
+                "example": 401
+              }
+            }
+          }
+        ]
+      },
+      "Forbidden": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "You do not have permission to access this resource."
+              },
+              "code": {
+                "type": "integer",
+                "example": 403
+              }
+            }
+          }
+        ]
+      },
+      "NotFound": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "The requested resource was not found."
+              },
+              "code": {
+                "type": "integer",
+                "example": 404
+              }
+            }
+          }
+        ]
+      },
+      "PaginationQuery": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "string"
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "description": "Current page number.",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "description": "Number of items returned per page.",
+            "example": 20
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of items matching the query (across all pages).",
+            "example": 340
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of pages given the current limit.",
+            "example": 17
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "description": "Whether a subsequent page exists.",
+            "example": true
+          },
+          "hasPreviousPage": {
+            "type": "boolean",
+            "description": "Whether a previous page exists.",
+            "example": false
+          }
+        },
+        "required": [
+          "page",
+          "limit",
+          "total",
+          "totalPages",
+          "hasNextPage",
+          "hasPreviousPage"
+        ]
+      },
+      "Badge": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique badge identifier.",
+            "example": "665f1a2b3c4d5e6f7a8b9c0d"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the badge.",
+            "example": "First Answer"
+          },
+          "description": {
+            "type": "string",
+            "description": "Short description of what earns this badge.",
+            "example": "Posted your first accepted answer."
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "bronze",
+              "silver",
+              "gold"
+            ],
+            "description": "Badge tier indicating its prestige level.",
+            "example": "bronze"
+          },
+          "awardedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-8601 timestamp of when the badge was awarded.",
+            "example": "2024-06-01T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "tier",
+          "awardedAt"
+        ]
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the user.",
+            "example": "665f1a2b3c4d5e6f7a8b9c0d"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full display name of the user.",
+            "example": "Ada Lovelace"
+          },
+          "username": {
+            "type": "string",
+            "description": "Unique username / handle.",
+            "example": "ada_lovelace"
+          },
+          "avatarUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "URL of the user's avatar image. Null when no avatar is set.",
+            "example": "https://cdn.stackunderflow.dev/avatars/ada_lovelace.webp"
+          },
+          "bio": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 300,
+            "description": "Short biography written by the user (max 300 chars).",
+            "example": "Mathematician and writer. First programmer in history."
+          },
+          "reputation": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Accumulated reputation points earned through upvotes, accepted answers, etc.",
+            "example": 4820
+          },
+          "badges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Badge"
+            },
+            "description": "List of badges awarded to this user."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-8601 timestamp of account creation.",
+            "example": "2023-11-15T09:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "username",
+          "avatarUrl",
+          "bio",
+          "reputation",
+          "badges",
+          "createdAt"
+        ]
+      },
+      "PaginatedUsers": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponse"
+            },
+            "description": "Array of items for the current page."
+          },
+          "meta": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "description": "Pagination metadata."
+              }
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "UpdateProfile": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80,
+            "description": "Updated display name (2–80 chars).",
+            "example": "Ada Lovelace"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 30,
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Updated username — lowercase letters, digits and underscores only (3–30 chars).",
+            "example": "ada_lovelace_42"
+          },
+          "bio": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "Updated biography (max 300 chars).",
+            "example": "Mathematician, writer, and pioneer of computing."
+          },
+          "avatarUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL pointing to the new avatar image.",
+            "example": "https://cdn.stackunderflow.dev/avatars/ada_new.webp"
+          }
+        }
+      },
+      "ActivityEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of this activity event.",
+            "example": "665f1a2b3c4d5e6f7a8b9c0e"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "question_posted",
+              "answer_posted",
+              "answer_accepted",
+              "vote_cast",
+              "badge_earned",
+              "reputation_changed"
+            ],
+            "description": "The kind of action that generated this activity event.",
+            "example": "answer_accepted"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable summary of the event.",
+            "example": "Your answer to \"What is a monad?\" was accepted."
+          },
+          "reputationDelta": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Reputation change caused by this event. Null when the event does not affect reputation.",
+            "example": 15
+          },
+          "relatedEntityId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ObjectId of the question, answer, or badge related to this event. Null when not applicable.",
+            "example": "665f1a2b3c4d5e6f7a8b9c01"
+          },
+          "relatedEntityType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "question",
+              "answer",
+              "badge",
+              null
+            ],
+            "description": "Collection / resource type of the related entity.",
+            "example": "answer"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-8601 timestamp of when the event occurred.",
+            "example": "2024-05-20T14:22:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "description",
+          "reputationDelta",
+          "relatedEntityId",
+          "relatedEntityType",
+          "occurredAt"
+        ]
+      },
+      "ActivityFeed": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "ObjectId of the user whose activity is listed.",
+            "example": "665f1a2b3c4d5e6f7a8b9c0d"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityEvent"
+            },
+            "description": "Chronologically ordered list of activity events (newest first)."
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "example": 1
+              },
+              "limit": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "example": 20
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 87
+              },
+              "totalPages": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 5
+              },
+              "hasNextPage": {
+                "type": "boolean",
+                "example": true
+              },
+              "hasPreviousPage": {
+                "type": "boolean",
+                "example": false
+              }
+            },
+            "required": [
+              "page",
+              "limit",
+              "total",
+              "totalPages",
+              "hasNextPage",
+              "hasPreviousPage"
+            ],
+            "description": "Pagination metadata for the activity feed."
+          }
+        },
+        "required": [
+          "userId",
+          "events",
+          "meta"
+        ]
+      },
+      "DashboardStats": {
+        "type": "object",
+        "properties": {
+          "reputation": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Current total reputation.",
+            "example": 4820
+          },
+          "reputationThisMonth": {
+            "type": "integer",
+            "description": "Reputation delta for the current calendar month.",
+            "example": 340
+          },
+          "questionsCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of questions posted by the user.",
+            "example": 12
+          },
+          "answersCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of answers posted by the user.",
+            "example": 47
+          },
+          "acceptedAnswersCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of answers that were accepted by the question author.",
+            "example": 23
+          },
+          "acceptanceRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Ratio of accepted answers to total answers, expressed as a decimal between 0 and 1.",
+            "example": 0.49
+          },
+          "upvotesReceived": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total upvotes received across all questions and answers.",
+            "example": 318
+          },
+          "badgesCount": {
+            "type": "object",
+            "properties": {
+              "gold": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 1
+              },
+              "silver": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 5
+              },
+              "bronze": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 14
+              }
+            },
+            "required": [
+              "gold",
+              "silver",
+              "bronze"
+            ],
+            "description": "Badge counts grouped by tier."
+          },
+          "recentBadges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Badge"
+            },
+            "maxItems": 5,
+            "description": "Up to 5 most recently awarded badges."
+          },
+          "topTags": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tag": {
+                  "type": "string",
+                  "example": "typescript"
+                },
+                "postsCount": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "example": 18
+                },
+                "score": {
+                  "type": "integer",
+                  "description": "Net score (upvotes minus downvotes) for all posts under this tag.",
+                  "example": 94
+                }
+              },
+              "required": [
+                "tag",
+                "postsCount",
+                "score"
+              ]
+            },
+            "maxItems": 10,
+            "description": "Top 10 tags by post count for this user."
+          }
+        },
+        "required": [
+          "reputation",
+          "reputationThisMonth",
+          "questionsCount",
+          "answersCount",
+          "acceptedAnswersCount",
+          "acceptanceRate",
+          "upvotesReceived",
+          "badgesCount",
+          "recentBadges",
+          "topTags"
+        ]
+      },
+      "TagStats": {
+        "type": "object",
+        "properties": {
+          "questionsCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of questions that carry this tag.",
+            "example": 1420
+          },
+          "questionsThisWeek": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of questions tagged in the past 7 days.",
+            "example": 38
+          },
+          "questionsThisMonth": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of questions tagged in the past 30 days.",
+            "example": 172
+          },
+          "watchersCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of users who are watching this tag.",
+            "example": 3210
+          }
+        },
+        "required": [
+          "questionsCount",
+          "questionsThisWeek",
+          "questionsThisMonth",
+          "watchersCount"
+        ]
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the tag.",
+            "example": "665f1a2b3c4d5e6f7a8b9c10"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 35,
+            "pattern": "^[a-z0-9-]+$",
+            "description": "URL-safe tag name — lowercase letters, digits and hyphens only (1–35 chars).",
+            "example": "typescript"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "description": "Short description of what the tag represents (max 500 chars). Null when no description has been written yet.",
+            "example": "TypeScript is a strongly typed programming language that builds on JavaScript."
+          },
+          "stats": {
+            "$ref": "#/components/schemas/TagStats"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-8601 timestamp of when the tag was created.",
+            "example": "2023-09-01T08:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "stats",
+          "createdAt"
+        ]
+      },
+      "TagDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Tag"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "wikiBody": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Full Markdown wiki body for the tag. May include usage guidance, links and code examples. Null when no wiki has been written yet.",
+                "example": "## TypeScript\n\nTypeScript is a superset of JavaScript that adds optional static typing..."
+              },
+              "relatedTags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "665f1a2b3c4d5e6f7a8b9c11"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "javascript"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ]
+                },
+                "maxItems": 10,
+                "description": "Up to 10 tags frequently used together with this tag."
+              },
+              "moderators": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "665f1a2b3c4d5e6f7a8b9c0d"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Ada Lovelace"
+                    },
+                    "avatarUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "uri",
+                      "example": "https://cdn.stackunderflow.dev/avatars/ada_lovelace.webp"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "avatarUrl"
+                  ]
+                },
+                "description": "Users designated as moderators / curators for this tag."
+              }
+            },
+            "required": [
+              "wikiBody",
+              "relatedTags",
+              "moderators"
+            ]
+          }
+        ]
+      },
+      "PaginatedTags": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            },
+            "description": "Array of items for the current page."
+          },
+          "meta": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "description": "Pagination metadata."
+              }
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "CreateTag": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 35,
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Unique tag name — lowercase letters, digits and hyphens only (1–35 chars). Must not already exist in the system.",
+            "example": "drizzle-orm"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Short description for the tag (max 500 chars). Recommended but optional.",
+            "example": "Drizzle ORM is a TypeScript ORM for SQL databases."
+          },
+          "wikiBody": {
+            "type": "string",
+            "description": "Optional initial Markdown wiki body. Can be added or updated later by moderators.",
+            "example": "## Drizzle ORM\n\nDrizzle is a headless TypeScript ORM..."
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "TagWatchIgnoreBody": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 35,
+              "pattern": "^[a-z0-9-]+$",
+              "example": "typescript"
+            },
+            "minItems": 1,
+            "maxItems": 20,
+            "description": "Array of tag names to watch or ignore (1–20 per request). Tag names must already exist in the system.",
+            "example": [
+              "typescript",
+              "nodejs",
+              "mongodb"
+            ]
+          }
+        },
+        "required": [
+          "tags"
+        ]
+      },
+      "TagPreferencesResponse": {
+        "type": "object",
+        "properties": {
+          "watchedTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Complete updated list of tag names the user is watching.",
+            "example": [
+              "typescript",
+              "nodejs",
+              "mongodb"
+            ]
+          },
+          "ignoredTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Complete updated list of tag names the user is ignoring.",
+            "example": [
+              "php",
+              "jquery"
+            ]
+          }
+        },
+        "required": [
+          "watchedTags",
+          "ignoredTags"
+        ]
+      },
+      "TagsQuery": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "string",
+            "default": "1",
+            "description": "Page number (1-indexed).",
+            "example": "1"
+          },
+          "limit": {
+            "type": "string",
+            "default": "20",
+            "description": "Items per page (1–100).",
+            "example": "20"
+          },
+          "search": {
+            "type": "string",
+            "description": "Free-text filter applied to tag names and descriptions. Case-insensitive prefix match.",
+            "example": "type"
+          },
+          "sort": {
+            "type": "string",
+            "enum": [
+              "popular",
+              "name",
+              "newest"
+            ],
+            "default": "popular",
+            "description": "`popular` — order by total question count (desc). `name` — alphabetical order. `newest` — order by creation date (desc).",
+            "example": "popular"
+          }
+        }
+      },
+      "ConflictError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Tag 'typescript' already exists."
+          },
+          "code": {
+            "type": "integer",
+            "example": 409
+          }
+        },
+        "required": [
+          "message",
+          "code"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "List users",
+        "description": "Returns a paginated list of registered users. Supports optional filtering by username or display name via the `search` query parameter.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of users.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedUsers"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — you lack the necessary permissions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — the requested resource does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user by ID",
+        "description": "Returns the public profile of the user with the given MongoDB ObjectId.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$",
+              "description": "MongoDB ObjectId of the target user."
+            },
+            "required": true,
+            "description": "MongoDB ObjectId of the target user.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public user profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — you lack the necessary permissions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — the requested resource does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update my profile",
+        "description": "Partially updates the authenticated user's profile. All fields are optional — only the provided fields are updated.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Fields to update. At least one field must be provided.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user profile reflecting the new values.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — you lack the necessary permissions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — the requested resource does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}/activity": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user activity feed",
+        "description": "Returns a paginated, chronologically ordered (newest-first) list of activity events for the specified user — questions posted, answers accepted, badges earned, etc.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$",
+              "description": "MongoDB ObjectId of the target user."
+            },
+            "required": true,
+            "description": "MongoDB ObjectId of the target user.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated activity feed for the requested user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityFeed"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — you lack the necessary permissions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — the requested resource does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me/dashboard": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get my dashboard stats",
+        "description": "Returns aggregated statistics for the authenticated user's personal dashboard: reputation history, question / answer counts, acceptance rate, badge totals, and top tags.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated dashboard statistics for the authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStats"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — you lack the necessary permissions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tags": {
+      "get": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "List tags",
+        "description": "Returns a paginated, searchable list of all tags. Use the `search` parameter to filter by name or description, and `sort` to control ordering.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "default": "1",
+              "description": "Page number (1-indexed).",
+              "example": "1"
+            },
+            "required": false,
+            "description": "Page number (1-indexed).",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "default": "20",
+              "description": "Items per page (1–100).",
+              "example": "20"
+            },
+            "required": false,
+            "description": "Items per page (1–100).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Free-text filter applied to tag names and descriptions. Case-insensitive prefix match.",
+              "example": "type"
+            },
+            "required": false,
+            "description": "Free-text filter applied to tag names and descriptions. Case-insensitive prefix match.",
+            "name": "search",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "popular",
+                "name",
+                "newest"
+              ],
+              "default": "popular",
+              "description": "`popular` — order by total question count (desc). `name` — alphabetical order. `newest` — order by creation date (desc).",
+              "example": "popular"
+            },
+            "required": false,
+            "description": "`popular` — order by total question count (desc). `name` — alphabetical order. `newest` — order by creation date (desc).",
+            "name": "sort",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of tags.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTags"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — you lack the necessary permissions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — the requested resource does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Create a tag",
+        "description": "Creates a new tag in the system. \n\n> **Established User required** — the authenticated user must have a reputation of **200 or above** to create tags. Requests from users below this threshold will receive a `403 Forbidden` response.\n\nTag names must be unique, URL-safe (lowercase letters, digits and hyphens) and between 1 and 35 characters long.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Tag name, description and optional wiki body.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTag"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tag created successfully. Returns the full detail object of the new tag.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — either the token is invalid, or the user's reputation is below the 200-point threshold required to create tags.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict — a tag with this name already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tags/{id}": {
+      "get": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Get tag details",
+        "description": "Returns the full detail view for a tag, including its wiki body (Markdown), usage statistics, related tags and assigned moderators.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "MongoDB ObjectId or URL-safe name of the tag.",
+              "example": "665f1a2b3c4d5e6f7a8b9c10"
+            },
+            "required": true,
+            "description": "MongoDB ObjectId or URL-safe name of the tag.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full tag detail object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — you lack the necessary permissions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — the requested resource does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me/tags/watch": {
+      "post": {
+        "tags": [
+          "Tags",
+          "Users"
+        ],
+        "summary": "Watch tags",
+        "description": "Adds one or more tags to the authenticated user's **watch list**. Watched tags are used to personalise the question feed and send notifications. Tags already being watched are silently ignored (idempotent). Sending a tag that is currently on the **ignore list** will move it to watched.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of tag names to add to the watch list (1–20 per request).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagWatchIgnoreBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Watch list updated. Returns the complete, updated tag preference lists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagPreferencesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — one or more of the supplied tag names do not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me/tags/ignore": {
+      "post": {
+        "tags": [
+          "Tags",
+          "Users"
+        ],
+        "summary": "Ignore tags",
+        "description": "Adds one or more tags to the authenticated user's **ignore list**. Questions carrying only ignored tags are hidden from the user's feed. Tags already being ignored are silently skipped (idempotent). Sending a tag that is currently on the **watch list** will move it to ignored.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of tag names to add to the ignore list (1–20 per request).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagWatchIgnoreBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ignore list updated. Returns the complete, updated tag preference lists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagPreferencesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — the request payload is invalid or failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — a valid authentication token is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — one or more of the supplied tag names do not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

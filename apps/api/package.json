@@ -8,7 +8,8 @@
     "start": "node dist/main.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts",
     "docs:generate": "ts-node ../../scripts/generate-openapi.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate:openapi": "ts-node scripts/generate-openapi.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,9 +22,11 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
+    "fs-extra": "^11.3.5",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.3",
+    "nestjs-zod": "^5.4.0",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
