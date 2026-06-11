@@ -8,9 +8,7 @@ import {
   SocialAuthSchema,
 } from './auth.schema';
 
-// ---------------------------------------------------------------------------
-// POST /api/auth/login
-// ---------------------------------------------------------------------------
+// -- POST /api/auth/login
 
 registry.registerPath({
   method: 'post',
@@ -40,9 +38,8 @@ registry.registerPath({
   },
 });
 
-// ---------------------------------------------------------------------------
-// POST /api/auth/register
-// ---------------------------------------------------------------------------
+
+// -- POST /api/auth/register
 
 registry.registerPath({
   method: 'post',
@@ -72,9 +69,7 @@ registry.registerPath({
   },
 });
 
-// ---------------------------------------------------------------------------
-// POST /api/auth/social
-// ---------------------------------------------------------------------------
+// --POST /api/auth/social
 
 registry.registerPath({
   method: 'post',

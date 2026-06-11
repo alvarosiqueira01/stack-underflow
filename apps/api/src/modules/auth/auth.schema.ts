@@ -1,13 +1,8 @@
 import { z } from 'zod';
 import { registry } from '../../common/openapi/registry';
 
-// ---------------------------------------------------------------------------
-// LoginRequest
-// ---------------------------------------------------------------------------
+// -- LoginRequest
 
-/**
- * Request body for POST /api/auth/login.
- */
 export const LoginSchema = registry.register(
   'Login',
   z
@@ -24,14 +19,8 @@ export const LoginSchema = registry.register(
     .openapi('Login'),
 );
 
-// ---------------------------------------------------------------------------
-// RegisterRequest
-// ---------------------------------------------------------------------------
+// -- RegisterRequest
 
-/**
- * Request body for POST /api/auth/register.
- * Creates a new account at the "new_user" reputation level.
- */
 export const RegisterSchema = registry.register(
   'Register',
   z
@@ -58,13 +47,8 @@ export const RegisterSchema = registry.register(
     .openapi('Register'),
 );
 
-// ---------------------------------------------------------------------------
-// SocialAuthRequest
-// ---------------------------------------------------------------------------
+// -- SocialAuthRequest
 
-/**
- * Request body for POST /api/auth/social.
- */
 export const SocialAuthSchema = registry.register(
   'SocialAuth',
   z
@@ -81,13 +65,8 @@ export const SocialAuthSchema = registry.register(
     .openapi('SocialAuth'),
 );
 
-// ---------------------------------------------------------------------------
-// AuthToken — success response
-// ---------------------------------------------------------------------------
+// -- AuthToken — success response
 
-/**
- * JWT payload returned on successful login or social auth.
- */
 export const AuthTokenSchema = registry.register(
   'AuthToken',
   z
@@ -104,13 +83,8 @@ export const AuthTokenSchema = registry.register(
     .openapi('AuthToken'),
 );
 
-// ---------------------------------------------------------------------------
-// AuthUser — registration response
-// ---------------------------------------------------------------------------
+// -- AuthUser — registration response
 
-/**
- * Newly created user returned after a successful registration.
- */
 export const AuthUserSchema = registry.register(
   'AuthUser',
   z
@@ -139,9 +113,7 @@ export const AuthUserSchema = registry.register(
     .openapi('AuthUser'),
 );
 
-// ---------------------------------------------------------------------------
-// Inferred types (used by controllers / services)
-// ---------------------------------------------------------------------------
+// -- Inferred types (used by controllers / services)
 
 export type LoginDto = z.infer<typeof LoginSchema>;
 export type RegisterDto = z.infer<typeof RegisterSchema>;
