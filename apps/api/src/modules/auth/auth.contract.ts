@@ -14,30 +14,29 @@ registry.registerPath({
   method: 'post',
   path: '/api/auth/login',
   tags: ['Auth'],
-  summary: 'Login with e-mail and password',
+  summary: 'Login com e-mail e senha',
   description:
-    'Validates the provided credentials and returns a signed JWT access token ' +
-    'that must be sent as `Authorization: Bearer <token>` on subsequent requests.',
+    'Valida as credenciais fornecidas e retorna um JWT assinado ' +
+    'que deve ser enviado como `Authorization: Bearer <token>` nas requisições subsequentes.',
   request: {
     body: {
       required: true,
-      description: 'User credentials.',
+      description: 'Credenciais do usuário.',
       content: { 'application/json': { schema: LoginSchema } },
     },
   },
   responses: {
     200: {
-      description: 'Credentials accepted — JWT access token returned.',
+      description: 'Credenciais aceitas — token JWT retornado.',
       content: { 'application/json': { schema: AuthTokenSchema } },
     },
     400: commonErrorResponses[400],
     401: {
-      description: 'Unauthorized — e-mail not found or password is incorrect.',
+      description: 'Não autorizado — e-mail não encontrado ou senha incorreta.',
       content: commonErrorResponses[401].content,
     },
   },
 });
-
 
 // -- POST /api/auth/register
 
@@ -45,56 +44,56 @@ registry.registerPath({
   method: 'post',
   path: '/api/auth/register',
   tags: ['Auth'],
-  summary: 'Create a new account',
+  summary: 'Criar nova conta',
   description:
-    'Registers a new user account at the **New User** reputation level. ' +
-    'The e-mail and username must be unique across the platform.',
+    'Registra uma nova conta de usuário no nível **Novo Usuário**. ' +
+    'O e-mail e o nome de usuário devem ser únicos na plataforma.',
   request: {
     body: {
       required: true,
-      description: 'Registration details for the new account.',
+      description: 'Dados de cadastro da nova conta.',
       content: { 'application/json': { schema: RegisterSchema } },
     },
   },
   responses: {
     201: {
-      description: 'Account created — newly registered user returned.',
+      description: 'Conta criada — dados do novo usuário retornados.',
       content: { 'application/json': { schema: AuthUserSchema } },
     },
     400: commonErrorResponses[400],
     409: {
-      description: 'Conflict — an account with this e-mail or username already exists.',
+      description: 'Conflito — já existe uma conta com este e-mail ou nome de usuário.',
       content: { 'application/json': { schema: commonErrorResponses[400].content['application/json'].schema } },
     },
   },
 });
 
-// --POST /api/auth/social
+// -- POST /api/auth/social
 
 registry.registerPath({
   method: 'post',
   path: '/api/auth/social',
   tags: ['Auth'],
-  summary: 'Authenticate via social provider',
+  summary: 'Autenticar via provedor social',
   description:
-    'Exchanges an OAuth token (issued by Apple, Facebook, GitHub or Google) for a ' +
-    'platform JWT. If no account is associated with the provider identity, one is ' +
-    'created automatically at the **New User** level.',
+    'Troca um token OAuth (emitido por Apple, Facebook, GitHub ou Google) por um ' +
+    'JWT da plataforma. Se nenhuma conta estiver associada à identidade do provedor, ' +
+    'uma nova conta é criada automaticamente no nível **Novo Usuário**.',
   request: {
     body: {
       required: true,
-      description: 'OAuth provider and token obtained from the client-side OAuth flow.',
+      description: 'Provedor OAuth e token obtido pelo fluxo OAuth no cliente.',
       content: { 'application/json': { schema: SocialAuthSchema } },
     },
   },
   responses: {
     200: {
-      description: 'Provider token verified — platform JWT returned.',
+      description: 'Token do provedor verificado — JWT da plataforma retornado.',
       content: { 'application/json': { schema: AuthTokenSchema } },
     },
     400: commonErrorResponses[400],
     401: {
-      description: 'Unauthorized — the provider token is invalid or expired.',
+      description: 'Não autorizado — token do provedor inválido ou expirado.',
       content: commonErrorResponses[401].content,
     },
   },

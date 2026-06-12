@@ -26,6 +26,11 @@ import {
   registerController,
   socialAuthController,
 } from './modules/auth/auth.controller';
+import {
+  reviewsListController,
+  reviewsGetController,
+  reviewsActionController,
+} from './modules/reviews/reviews.controller';
 
 // ── OpenAPI document ──────────────────────────────────────────────────────────
 const generator = new OpenApiGeneratorV31(registry.definitions);
@@ -66,12 +71,18 @@ app.post('/api/auth/register', registerController);
 app.post('/api/auth/social', socialAuthController);
 
 // ── Rotas protegidas (requerem JWT) ───────────────────────────────────────────
+import { requireRole } from './common/middlewares/auth.middleware';
+
+// Reviews
+app.get('/api/reviews',             authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsListController);
+app.get('/api/reviews/:id',         authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsGetController);
+app.post('/api/reviews/:id/action', authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsActionController);
+
 // Exemplo — descomentar conforme os módulos forem implementados:
 // app.get('/api/users/me/dashboard', authMiddleware, usersDashboardController);
 // app.put('/api/users/me', authMiddleware, usersUpdateController);
 // app.post('/api/questions', authMiddleware, questionsCreateController);
 // app.delete('/api/questions/:id', authMiddleware, requireRole('moderator'), questionsDeleteController);
-// app.get('/api/reviews', authMiddleware, reviewsListController);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 async function start() {
