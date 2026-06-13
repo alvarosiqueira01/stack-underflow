@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/alvarosiqueira01/stack-underflow/issues"
   },
-  "homepage": "https://github.com/alvarosiqueira01/stack-underflow#readme"
+  "homepage": "https://github.com/alvarosiqueira01/stack-underflow#readme",
   "private": true,
   "workspaces": [
     "apps/*",

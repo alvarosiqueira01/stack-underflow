@@ -1,71 +1,97 @@
-import 'reflect-metadata';
-import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { extendZodWithOpenApi, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 
 extendZodWithOpenApi(z);
 
-const express = require('express');
+import express from 'express';
 import * as swaggerUi from 'swagger-ui-express';
+import { connectDatabase } from './config/db.config';
+import { env } from './config/env.config';
+import { authMiddleware } from './common/middlewares/auth.middleware';
 
-import * as path from 'path';
-
-// import './modules/auth/auth.contract';
-
+// Contracts — registram paths no registry
+import './modules/auth/auth.contract';
+import './modules/reviews/reviews.contract';
 import './modules/users/users.contract';
-
 import './modules/tags/tags.contract';
-
 // import './modules/questions/questions.contract';
-
 // import './modules/answers/answers.contract';
 
-// import './modules/reviews/reviews.contract';
-
 import './common/openapi/security';
-import { OpenAPIObject } from 'openapi3-ts/oas31';
-
-const app = express();
-
-app.use(express.json());
 import { registry } from './common/openapi/registry';
 
-console.log(registry.definitions);
-const openApiDocument: OpenAPIObject = require(path.join(__dirname, '../../scripts/generate-openapi')).openApiDocument;
+// Controllers
+import {
+  loginController,
+  registerController,
+  socialAuthController,
+} from './modules/auth/auth.controller';
+import {
+  reviewsListController,
+  reviewsGetController,
+  reviewsActionController,
+} from './modules/reviews/reviews.controller';
 
-// SWAGGER UI
-app.use(
-  '/docs',
-  swaggerUi.serve,
-  swaggerUi.setup(openApiDocument, {
-    explorer: true,
-    customSiteTitle: 'StackUnderflow API Docs',
-  }),
-);
-
-app.get('/openapi.json', (_: any, res: { json: (arg0: OpenAPIObject) => void; }) => {
-  res.json(openApiDocument);
+// ── OpenAPI document ──────────────────────────────────────────────────────────
+const generator = new OpenApiGeneratorV31(registry.definitions);
+const openApiDocument = generator.generateDocument({
+  openapi: '3.1.0',
+  info: {
+    title: 'StackUnderflow API',
+    version: '1.0.0',
+    description: 'Community Q&A platform API inspired by Stack Overflow.',
+  },
+  servers: [{ url: `http://localhost:${env.port}`, description: 'Local Development' }],
+  tags: [
+    { name: 'Auth' },
+    { name: 'Users' },
+    { name: 'Questions' },
+    { name: 'Answers' },
+    { name: 'Reviews' },
+    { name: 'Tags' },
+  ],
 });
 
-app.get('/', (_: any, res: { json: (arg0: { name: string; docs: string; openapi: string; }) => void; }) => {
-  res.json({
-    name: 'StackUnderflow API',
-    docs: '/docs',
-    openapi: '/openapi.json',
+// ── App 
+const app = express();
+app.use(express.json());
+
+// Swagger UI
+app.use('/docs', swaggerUi.serve as any, swaggerUi.setup(openApiDocument, {
+  explorer: true,
+  customSiteTitle: 'StackUnderflow API Docs',
+}) as any);
+
+app.get('/openapi.json', (_req, res) => res.json(openApiDocument));
+app.get('/', (_req, res) => res.json({ name: 'StackUnderflow API', docs: '/docs' }));
+
+// ── Rotas públicas ────────────────────────────────────────────────────────────
+app.post('/api/auth/login', loginController);
+app.post('/api/auth/register', registerController);
+app.post('/api/auth/social', socialAuthController);
+
+// ── Rotas protegidas (requerem JWT) ───────────────────────────────────────────
+import { requireRole } from './common/middlewares/auth.middleware';
+
+// Reviews
+app.get('/api/reviews',             authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsListController);
+app.get('/api/reviews/:id',         authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsGetController);
+app.post('/api/reviews/:id/action', authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsActionController);
+
+// Exemplo — descomentar conforme os módulos forem implementados:
+// app.get('/api/users/me/dashboard', authMiddleware, usersDashboardController);
+// app.put('/api/users/me', authMiddleware, usersUpdateController);
+// app.post('/api/questions', authMiddleware, questionsCreateController);
+// app.delete('/api/questions/:id', authMiddleware, requireRole('moderator'), questionsDeleteController);
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+async function start() {
+  await connectDatabase();
+
+  app.listen(env.port, () => {
+    console.log(`Server running on http://localhost:${env.port}`);
+    console.log(`Swagger UI: http://localhost:${env.port}/docs`);
   });
-});
+}
 
-const PORT = process.env.PORT ?? 8080;
-
-app.listen(PORT, () => {
-  console.log(
-    `Server running on http://localhost:${PORT}`,
-  );
-
-  console.log(
-    `Swagger UI available at http://localhost:${PORT}/docs`,
-  );
-
-  console.log(
-    `OpenAPI JSON available at http://localhost:${PORT}/openapi.json`,
-  );
-});
+start();
