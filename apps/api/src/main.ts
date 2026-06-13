@@ -3,9 +3,11 @@ import { z } from 'zod';
 
 extendZodWithOpenApi(z);
 
-import express from 'express';
+import cors from "cors";
+import express from "express";
+import helmet from "helmet";
 import * as swaggerUi from 'swagger-ui-express';
-import { connectDatabase } from './config/db.config';
+import { connectToDatabase } from './config/db.config';
 import { env } from './config/env.config';
 import { authMiddleware } from './common/middlewares/auth.middleware';
 
@@ -41,7 +43,7 @@ const openApiDocument = generator.generateDocument({
     version: '1.0.0',
     description: 'Community Q&A platform API inspired by Stack Overflow.',
   },
-  servers: [{ url: `http://localhost:${env.port}`, description: 'Local Development' }],
+  servers: [{ url: `http://localhost:${env.PORT}`, description: 'Local Development' }],
   tags: [
     { name: 'Auth' },
     { name: 'Users' },
@@ -86,11 +88,11 @@ app.post('/api/reviews/:id/action', authMiddleware, requireRole('established', '
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 async function start() {
-  await connectDatabase();
+  await connectToDatabase();
 
-  app.listen(env.port, () => {
-    console.log(`Server running on http://localhost:${env.port}`);
-    console.log(`Swagger UI: http://localhost:${env.port}/docs`);
+  app.listen(env.PORT, () => {
+    console.log(`Server running on http://localhost:${env.PORT}`);
+    console.log(`Swagger UI: http://localhost:${env.PORT}/docs`);
   });
 }
 

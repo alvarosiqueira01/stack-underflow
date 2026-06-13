@@ -1,9 +1,22 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
+import "dotenv/config";
+import { z } from "zod";
 
-export const env = {
-  port: process.env.PORT ?? '8081',
-  mongoUri: process.env.MONGODB_URI ?? 'mongodb://localhost:27017/stack-underflow',
-  jwtSecret: process.env.JWT_SECRET ?? 'change-me-in-production',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
-};
+const envSchema = z.object({
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
+  PORT: z.coerce.number().int().positive().default(3333),
+  MONGO_URI: z.string().min(1, "MONGO_URI is required"),
+});
+
+const parsedEnv = envSchema.safeParse(process.env);
+
+if (!parsedEnv.success) {
+  const errors = parsedEnv.error.issues
+    .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+    .join("; ");
+
+  throw new Error(`Invalid environment configuration: ${errors}`);
+}
+
+export const env = parsedEnv.data;
