@@ -37,6 +37,18 @@ export const usersRepository = {
     return UserModel.findOne({ username: username.toLowerCase() }).exec();
   },
 
+  findByEmailOrUsername(
+    email: string,
+    username: string,
+  ) {
+    return UserModel.findOne({
+      $or: [
+        { email: email.toLowerCase() },
+        { username: username.toLowerCase() },
+      ],
+    }).exec();
+  },
+
   list(options: ListUsersOptions = {}) {
     const { limit, skip } = getPagination(options);
     const filter: Record<string, unknown> = {};
@@ -195,21 +207,21 @@ export const usersRepository = {
               },
             },
             acceptanceRate: {
-                $cond: [
-                  { $gt: [{ $size: "$userAnswers" }, 0] },
-                  {
-                    $multiply: [
-                      {
-                        $divide: [
-                          { $size: { $filter: { input: "$userAnswers", as: "ans", cond: { $eq: ["$$ans.isAccepted", true] } } } },
-                          { $size: "$userAnswers" }
-                        ]
-                      },
-                      100
-                    ]
-                  },
-                  0
-                ]
+              $cond: [
+                { $gt: [{ $size: "$userAnswers" }, 0] },
+                {
+                  $multiply: [
+                    {
+                      $divide: [
+                        { $size: { $filter: { input: "$userAnswers", as: "ans", cond: { $eq: ["$$ans.isAccepted", true] } } } },
+                        { $size: "$userAnswers" }
+                      ]
+                    },
+                    100
+                  ]
+                },
+                0
+              ]
             },
           },
           topTagsAgregation: {

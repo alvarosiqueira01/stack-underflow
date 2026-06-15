@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { UserModel } from '../../common/models/users.model';
+import { usersRepository } from '../../common/repositories/users.repository';
 import { env } from '../../config/env.config';
 import type { LoginDto, RegisterDto, SocialAuthDto } from './auth.schema';
 
@@ -15,7 +15,10 @@ function generateToken(user: { id: string; email: string; username: string; role
 }
 
 export async function login(dto: LoginDto) {
-  const user = await UserModel.findOne({ email: dto.email.toLowerCase() });
+  const user =
+     await usersRepository.findByEmail(
+    dto.email
+  );
 
   if (!user || !user.passwordHash) {
     throw { status: 401, message: 'Invalid email or password.' };
@@ -33,9 +36,11 @@ export async function login(dto: LoginDto) {
 }
 
 export async function register(dto: RegisterDto) {
-  const existing = await UserModel.findOne({
-    $or: [{ email: dto.email.toLowerCase() }, { username: dto.username.toLowerCase() }],
-  });
+  const existing =
+    await usersRepository.findByEmailOrUsername(
+      dto.email,
+      dto.username
+  );
 
   if (existing) {
     const field = existing.email === dto.email.toLowerCase() ? 'email' : 'username';
@@ -44,11 +49,12 @@ export async function register(dto: RegisterDto) {
 
   const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
 
-  const user = await UserModel.create({
-    email: dto.email.toLowerCase(),
-    username: dto.username.toLowerCase(),
-    passwordHash,
-    role: 'new_user',
+  const user =
+    await usersRepository.create({
+      name: dto.name,
+      email: dto.email.toLowerCase(),
+      username: dto.username.toLowerCase(),
+      passwordHash,
   });
 
   return {
