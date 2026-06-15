@@ -9,15 +9,19 @@ import helmet from "helmet";
 import * as swaggerUi from 'swagger-ui-express';
 import { connectToDatabase } from './config/db.config';
 import { env } from './config/env.config';
-import { authMiddleware } from './common/middlewares/auth.middleware';
+
+import { authMiddleware, requireRole, requireReputation } from './common/middlewares/auth.middleware';
+import { validateRequest } from './common/middlewares/validate.middleware';
+import { errorMiddleware } from './common/middlewares/error.middleware';
+import { globalLimiter, authLimiter } from './common/middlewares/rate-limit.middleware';
 
 // Contracts — registram paths no registry
 import './modules/auth/auth.contract';
 import './modules/reviews/reviews.contract';
 import './modules/users/users.contract';
 import './modules/tags/tags.contract';
-// import './modules/questions/questions.contract';
-// import './modules/answers/answers.contract';
+import './modules/questions/questions.contract';
+import './modules/answers/answers.contract';
 
 import './common/openapi/security';
 import { registry } from './common/openapi/registry';
@@ -57,6 +61,9 @@ const openApiDocument = generator.generateDocument({
 // ── App 
 const app = express();
 app.use(express.json());
+app.use(helmet()); // Adiciona headers de segurança
+app.use(cors());
+app.use(globalLimiter); // Rate limiting global
 
 // Swagger UI
 app.use('/docs', swaggerUi.serve as any, swaggerUi.setup(openApiDocument, {
@@ -73,7 +80,6 @@ app.post('/api/auth/register', registerController);
 app.post('/api/auth/social', socialAuthController);
 
 // ── Rotas protegidas (requerem JWT) ───────────────────────────────────────────
-import { requireRole } from './common/middlewares/auth.middleware';
 
 // Reviews
 app.get('/api/reviews',             authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsListController);
@@ -86,9 +92,12 @@ app.post('/api/reviews/:id/action', authMiddleware, requireRole('established', '
 // app.post('/api/questions', authMiddleware, questionsCreateController);
 // app.delete('/api/questions/:id', authMiddleware, requireRole('moderator'), questionsDeleteController);
 
+// ── Tratamento de Erros Global ────────────────────────────────────────────────
+app.use(errorMiddleware);
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 async function start() {
-  await connectToDatabase();
+  //await connectToDatabase();
 
   app.listen(env.PORT, () => {
     console.log(`Server running on http://localhost:${env.PORT}`);

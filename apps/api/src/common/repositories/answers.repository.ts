@@ -1,12 +1,17 @@
 import type { SortOrder } from "mongoose";
 
-import { AnswerModel, type Answer } from "./answers.model";
+import { AnswerModel, type Answer } from "../models/answers.model";
+import { QuestionModel } from "../models/questions.model";
+import { count } from "node:console";
 
 type CreateAnswerData = Pick<Answer, "body" | "questionId" | "authorId">;
 type UpdateAnswerData = Partial<Pick<Answer, "body" | "isAccepted">>;
 
 type ListAnswersOptions = {
   sort?: "votes" | "newest" | "oldest";
+  authorId?: string;
+  isAccepted?: boolean;
+  questionId?: string;
 };
 
 export const answersRepository = {
@@ -30,12 +35,28 @@ export const answersRepository = {
     return AnswerModel.find(filter).sort(sort).exec();
   },
 
+  findByAuthorAndQuestion(questionId: string, authorId: string) {
+    return AnswerModel.findOne({ questionId, authorId }).exec();
+  },
+
   updateById(id: string, data: UpdateAnswerData) {
     return AnswerModel.findByIdAndUpdate(id, { $set: data }, { new: true }).exec();
   },
 
   deleteById(id: string) {
     return AnswerModel.findByIdAndDelete(id).exec();
+  },
+
+  count(filter: ListAnswersOptions = {}) {
+    return AnswerModel.countDocuments(filter).exec();
+  },
+
+  existsByQuestionId(questionId: string) {
+    return AnswerModel.exists({ questionId });
+  },
+
+  deleteByQuestionId(questionId: string) {
+    return AnswerModel.deleteMany({ questionId });
   },
 
   updateVoteCount(id: string, value: number) {
@@ -60,4 +81,5 @@ export const answersRepository = {
       { $set: { isAccepted: false } },
     ).exec();
   },
+
 };

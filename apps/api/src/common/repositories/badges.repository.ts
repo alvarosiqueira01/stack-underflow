@@ -3,7 +3,7 @@ import {
   UserBadgeModel,
   type Badge,
   type badgeTiers,
-} from "./badges.model";
+} from "../models/badges.model";
 
 type BadgeTier = (typeof badgeTiers)[number];
 type CreateBadgeData = Pick<Badge, "name" | "slug" | "tier" | "description">;

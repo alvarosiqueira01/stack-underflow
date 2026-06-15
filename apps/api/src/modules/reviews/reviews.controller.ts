@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ReviewActionSchema } from './reviews.schema';
-import * as reviewsService from './reviews.service';
+import { reviewsService } from './reviews.service';
 
 // -- GET /api/reviews
 

@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { UserModel } from '../../common/models/user.model';
+import { UserModel } from '../../common/models/users.model';
 import { env } from '../../config/env.config';
 import type { LoginDto, RegisterDto, SocialAuthDto } from './auth.schema';
 
@@ -9,8 +9,8 @@ const SALT_ROUNDS = 10;
 function generateToken(user: { id: string; email: string; username: string; role: string }) {
   return jwt.sign(
     { sub: user.id, email: user.email, username: user.username, role: user.role },
-    env.jwtSecret,
-    { expiresIn: env.jwtExpiresIn } as jwt.SignOptions,
+    env.JWT_SECRET,
+    { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions,
   );
 }
 

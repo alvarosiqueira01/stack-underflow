@@ -6,8 +6,9 @@ import {
   type InferSchemaType,
   type Model,
 } from "mongoose";
+import { UserRole } from '../types/user.types';
 
-export const userRoles = ["user", "moderator", "admin"] as const;
+export const userRoles: UserRole[] = ['new_user', 'established', 'moderator', 'admin'];
 
 const BadgeCountsSchema = new Schema(
   {
@@ -21,6 +22,7 @@ const BadgeCountsSchema = new Schema(
 const UserSchema = new Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 100 },
+    
     username: {
       type: String,
       required: true,
@@ -29,6 +31,7 @@ const UserSchema = new Schema(
       lowercase: true,
       maxlength: 50,
     },
+    
     email: {
       type: String,
       required: true,
@@ -37,17 +40,28 @@ const UserSchema = new Schema(
       lowercase: true,
       maxlength: 255,
     },
-    passwordHash: { type: String, required: true },
-    avatarUrl: { type: String, trim: true },
-    bio: { type: String, trim: true, maxlength: 500 },
+    
+    passwordHash: { type: String, default: null },
+    
+    avatarUrl: { type: String, default: null, trim: true },
+    bio: { type: String, default: null, trim: true, maxlength: 500 },
+    
+    isActive: { type: Boolean, default: true },
+
     location: { type: String, trim: true, maxlength: 120 },
     website: { type: String, trim: true, maxlength: 255 },
+    
     reputation: { type: Number, default: 0, min: 0 },
-    role: { type: String, enum: userRoles, default: "user" },
+    
+    role: { type: String, enum: userRoles, default: 'new_user' },
+    
     badges: { type: BadgeCountsSchema, default: () => ({}) },
     topTags: [{ type: Types.ObjectId, ref: "Tag" }],
   },
-  { timestamps: true },
+  { 
+    timestamps: true, 
+    versionKey: false 
+  },
 );
 
 UserSchema.index({ name: "text", username: "text" });

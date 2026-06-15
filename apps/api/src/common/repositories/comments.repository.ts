@@ -1,4 +1,4 @@
-import { CommentModel, type commentTargetTypes, type Comment } from "./comments.model";
+import { CommentModel, type commentTargetTypes, type Comment } from "../models/comments.model";
 
 type CommentTargetType = (typeof commentTargetTypes)[number];
 type CreateCommentData = Pick<Comment, "body" | "authorId" | "targetType" | "targetId">;

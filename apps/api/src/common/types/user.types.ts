@@ -1,1 +1,1 @@
-export type UserRole = 'new_user' | 'user' | 'established' | 'moderator' | 'admin';
+export type UserRole = 'new_user' | 'established' | 'moderator' | 'admin';

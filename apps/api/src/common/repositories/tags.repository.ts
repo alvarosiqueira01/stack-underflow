@@ -3,14 +3,15 @@ import type { SortOrder } from "mongoose";
 import {
   getPagination,
   type PaginationOptions,
-} from "../../common/repositories/pagination";
-import { TagModel, type Tag } from "./tags.model";
+} from "./pagination";
+import { TagModel, type Tag } from "../models/tags.model";
 
 type CreateTagData = Pick<Tag, "name" | "slug"> & Partial<Pick<Tag, "description">>;
 
 type ListTagsOptions = PaginationOptions & {
   search?: string;
   sort?: "popular" | "name" | "newest";
+  limit?: number;
 };
 
 function slugify(value: string): string {
@@ -63,6 +64,18 @@ export const tagsRepository = {
           : { totalQuestions: -1 };
 
     return TagModel.find(filter).sort(sort).skip(skip).limit(limit).exec();
+  },
+
+  count(search?: string | any) {
+    const filter: any = {};
+
+    if (search) {
+      filter.$text = {
+        $search: search
+      };
+    }
+
+    return TagModel.countDocuments(filter);
   },
 
   listPopular(limit = 10) {

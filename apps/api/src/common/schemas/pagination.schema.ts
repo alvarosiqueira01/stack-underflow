@@ -12,48 +12,6 @@ import { registry } from '../openapi/registry';
  * @example
  * const { page, limit } = PaginationQuerySchema.parse(req.query);
  */
-// export const PaginationQuerySchema = registry.register(
-//   'PaginationQuery',
-//   z
-//     .object({
-//       page: z
-//         .string()
-//         .optional()
-//         .default('1')
-//         .transform(Number)
-//         .pipe(
-//           z
-//             .number()
-//             .int()
-//             .positive()
-//             .openapi({
-//               description: 'Page number (1-indexed).',
-//               example: 1,
-//             }),
-//         )
-//         .openapi('page'),
- 
-//       limit: z
-//         .string()
-//         .optional()
-//         .default('20')
-//         .transform(Number)
-//         .pipe(
-//           z
-//             .number()
-//             .int()
-//             .min(1)
-//             .max(100)
-//             .openapi({
-//               description: 'Number of items per page (max 100).',
-//               example: 20,
-//             }),
-//         )
-//         .openapi('limit'),
-//     })
-//     .openapi('PaginationQuery'),
-// );
- 
 export const PaginationQuerySchema = registry.register(
   'PaginationQuery',
   z.object({

@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-import { VoteModel, type voteTargetTypes, type voteValues } from "./votes.model";
+import { VoteModel, type voteTargetTypes, type voteValues } from "../models/votes.model";
 
 type VoteTargetType = (typeof voteTargetTypes)[number];
 type VoteValue = (typeof voteValues)[number];

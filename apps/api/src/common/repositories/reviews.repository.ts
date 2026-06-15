@@ -3,10 +3,12 @@ import {
   type Review,
   type reviewStatuses,
   type reviewTypes,
-} from "./reviews.model";
+  type reviewActions,
+} from "../models/reviews.model";
 
 type ReviewType = (typeof reviewTypes)[number];
 type ReviewStatus = (typeof reviewStatuses)[number];
+type ReviewAction = (typeof reviewActions)[number];
 
 type CreateReviewData = Pick<
   Review,
@@ -14,28 +16,14 @@ type CreateReviewData = Pick<
 > &
   Partial<Pick<Review, "beforeContent" | "afterContent" | "editSummary">>;
 
-type FindPendingOptions = {
-  type?: ReviewType;
-  limit?: number;
-};
-
 export const reviewsRepository = {
   create(data: CreateReviewData) {
     return ReviewModel.create(data);
   },
 
   findById(id: string) {
-    return ReviewModel.findById(id).exec();
-  },
-
-  findPending(options: FindPendingOptions = {}) {
-    return ReviewModel.find({
-      status: "pending",
-      ...(options.type ? { type: options.type } : {}),
-    })
-      .sort({ createdAt: 1 })
-      .limit(options.limit ?? 20)
-      .exec();
+    // Popula o autor da submissão para exibição na UI
+    return ReviewModel.findById(id).populate("authorId", "username").exec();
   },
 
   countPendingByType() {
@@ -45,26 +33,19 @@ export const reviewsRepository = {
     ]).exec();
   },
 
-  setDecision(
+  // Nova função para registrar a decisão do revisor e atualizar o status geral simultaneamente
+  addDecisionAndUpdateStatus(
     reviewId: string,
-    reviewerId: string,
-    status: Exclude<ReviewStatus, "pending">,
-    rejectReason?: string,
+    decision: { reviewerId: string; action: ReviewAction; rejectionReasons?: string[] },
+    newStatus: ReviewStatus
   ) {
-    const decisionData: Record<string, unknown> = {
-      status,
-      reviewerId,
-      reviewedAt: new Date(),
-    };
-
-    if (rejectReason) {
-      decisionData.rejectReason = rejectReason;
-    }
-
     return ReviewModel.findByIdAndUpdate(
       reviewId,
-      { $set: decisionData },
-      { new: true },
+      {
+        $push: { decisions: decision },
+        $set: { status: newStatus },
+      },
+      { new: true } // Retorna o documento já modificado
     ).exec();
   },
 };

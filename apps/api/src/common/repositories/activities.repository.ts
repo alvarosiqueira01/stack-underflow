@@ -1,8 +1,8 @@
 import {
   getPagination,
   type PaginationOptions,
-} from "../../common/repositories/pagination";
-import { ActivityModel, type Activity } from "./activities.model";
+} from "./pagination";
+import { ActivityModel, type Activity } from "../models/activities.model";
 
 type CreateActivityData = Pick<
   Activity,

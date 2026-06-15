@@ -3,8 +3,8 @@ import type { SortOrder } from "mongoose";
 import {
   getPagination,
   type PaginationOptions,
-} from "../../common/repositories/pagination";
-import { QuestionModel, type Question } from "./questions.model";
+} from "./pagination";
+import { QuestionModel, type Question } from "../models/questions.model";
 
 type CreateQuestionData = Pick<Question, "title" | "body" | "authorId" | "tags"> &
   Partial<Pick<Question, "expectedResult">>;
@@ -17,7 +17,9 @@ type ListQuestionsOptions = PaginationOptions & {
   search?: string;
   tagId?: string;
   status?: Question["status"];
+  authorId?: string;
   sort?: "newest" | "active" | "votes" | "unanswered";
+  limit?: number;
 };
 
 export const questionsRepository = {
@@ -59,7 +61,7 @@ export const questionsRepository = {
     return QuestionModel.find(filter).sort(sort).skip(skip).limit(limit).exec();
   },
 
-  count(options: Pick<ListQuestionsOptions, "search" | "tagId" | "status"> = {}) {
+  count(options: Pick<ListQuestionsOptions, "search" | "tagId" | "status" | "authorId"> = {}) {
     const filter: Record<string, unknown> = {};
 
     if (options.search) {
@@ -76,6 +78,7 @@ export const questionsRepository = {
 
     return QuestionModel.countDocuments(filter).exec();
   },
+
 
   updateById(id: string, data: UpdateQuestionData) {
     return QuestionModel.findByIdAndUpdate(id, { $set: data }, { new: true }).exec();
@@ -116,4 +119,29 @@ export const questionsRepository = {
       { new: true },
     ).exec();
   },
+
+  closeQuestion(
+    questionId: string,
+    reason: string
+  ) {
+    return QuestionModel.findByIdAndUpdate(
+      questionId,
+      {
+        $set: {
+          status: "closed",
+          closeReason: reason
+        }
+      },
+      { new: true }
+    ).exec();
+  },
+
+  listTopTags(limit: number) {
+    return QuestionModel.aggregate<{ _id: string; count: number }>([
+      { $unwind: "$tags" },
+      { $group: { _id: "$tags", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: limit },
+    ]).exec();
+  }
 };

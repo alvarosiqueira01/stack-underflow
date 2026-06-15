@@ -8,6 +8,7 @@ export interface JwtPayload {
   email: string;
   username: string;
   role: UserRole;
+  reputation?: number;
 }
 
 declare global {
@@ -33,13 +34,27 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
   const token = authHeader.split(' ')[1];
 
   try {
-    const payload = jwt.verify(token, env.jwtSecret) as JwtPayload;
+    const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
     req.user = payload;
     next();
   } catch {
     res.status(401).json({ message: 'Invalid or expired token.', code: 401 });
   }
 }
+
+// Verifica se o usuário tem a reputação mínima exigida para a ação
+export const requireReputation = (minScore: number) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const userReputation = req.user?.reputation || 0;
+    if (userReputation < minScore) {
+      res.status(403).json({ 
+        message: `Forbidden: Requires at least ${minScore} reputation points. You have ${userReputation}.` 
+      });
+      return;
+    }
+    next();
+  };
+};
 
 /**
  * Middleware de autorização por role.

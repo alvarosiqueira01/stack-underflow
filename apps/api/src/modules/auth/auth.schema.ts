@@ -25,6 +25,10 @@ export const RegisterSchema = registry.register(
   'Register',
   z
     .object({
+      name: z.string().min(1).max(100).openapi({
+        description: 'Display name shown on the site (1–100 chars).',
+        example: 'Ada Lovelace',
+      }),
       email: z.string().email().openapi({
         description: 'E-mail address — must be unique across all accounts.',
         example: 'ada@stackunderflow.dev',

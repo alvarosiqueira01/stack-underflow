@@ -1,7 +1,7 @@
 import {
   UserTagPreferenceModel,
   type tagPreferenceStatuses,
-} from "./user-tag-preferences.model";
+} from "../models/user-tag-preferences.model";
 
 type TagPreferenceStatus = (typeof tagPreferenceStatuses)[number];
 
