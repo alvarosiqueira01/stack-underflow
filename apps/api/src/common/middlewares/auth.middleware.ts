@@ -5,6 +5,7 @@ import { UserRole } from '../types/user.types';
 
 export interface JwtPayload {
   sub: string;
+  id: string;
   email: string;
   username: string;
   role: UserRole;
@@ -35,7 +36,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
 
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
-    req.user = payload;
+    req.user = { ...payload, id: payload.sub };
     next();
   } catch {
     res.status(401).json({ message: 'Invalid or expired token.', code: 401 });

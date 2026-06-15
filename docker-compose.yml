@@ -1,20 +1,56 @@
-version: '3.9'
-
 services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: stack-underflow-api:local
+    container_name: stack-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3333}:3333"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3333
+      MONGO_URI: ${MONGO_URI:-mongodb://stack_user:stack_password@mongodb:27017/stack_underflow?authSource=stack_underflow}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-before-deploying}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+    depends_on:
+      - mongodb
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: stack-underflow-web:local
+    container_name: stack-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3333}
+    depends_on:
+      - api
 
   mongodb:
     image: mongo:7
     container_name: stack-db
+    restart: unless-stopped
 
     ports:
       - "27017:27017"
 
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-admin123}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-stack_underflow}
+      MONGO_DATABASE: ${MONGO_DATABASE:-stack_underflow}
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:-stack_user}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-stack_password}
 
     volumes:
       - mongo_data:/data/db
+      - ./infrastructure/mongo-init:/docker-entrypoint-initdb.d:ro
 
 volumes:
   mongo_data:

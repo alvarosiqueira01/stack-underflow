@@ -27,6 +27,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.3",
     "nestjs-zod": "^5.4.0",
+    "swagger-ui-express": "^5.0.1",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
@@ -41,7 +42,6 @@
     "nodemon": "^3.1.14",
     "openapi3-ts": "^4.6.0",
     "reflect-metadata": "^0.2.2",
-    "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   }

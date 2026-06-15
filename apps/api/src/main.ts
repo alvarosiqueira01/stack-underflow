@@ -97,7 +97,7 @@ app.use(errorMiddleware);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 async function start() {
-  //await connectToDatabase();
+  await connectToDatabase();
 
   app.listen(env.PORT, () => {
     console.log(`Server running on http://localhost:${env.PORT}`);
