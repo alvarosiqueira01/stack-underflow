@@ -38,7 +38,7 @@ stack-underflow/
 
 ---
 Inicialização:
-- docker-compose up mongodb
+- docker-compose up mongodb<br>
 e na pasta /api ou /web:
 - npm run dev
 
