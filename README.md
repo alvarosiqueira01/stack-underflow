@@ -37,6 +37,11 @@ stack-underflow/
 ```
 
 ---
+Inicialização:
+> docker-compose up mongodb
+e na pasta /api ou /web:
+> npm run dev
+
 
 # Tecnologias Utilizadas
 
