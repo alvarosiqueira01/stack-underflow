@@ -1,16 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 import { AnswersService } from './answers.service';
+import { toAnswerResponse } from './answers.mapper';
 
 const answersService = new AnswersService();
 
 export class AnswersController {
   async list(req: Request, res: Response, next: NextFunction) {
-    try { res.status(200).json(await answersService.getAnswersByQuestion(req.params.id)); } 
+    try {
+      const answers = await answersService.getAnswersByQuestion(req.params.id);
+      res.status(200).json(answers.map(toAnswerResponse));
+    }
     catch (error) { next(error); }
   }
 
   async create(req: Request, res: Response, next: NextFunction) {
-    try { res.status(201).json(await answersService.createAnswer(req.params.id, req.user!.id, req.body)); } 
+    try {
+      const answer = await answersService.createAnswer(req.params.id, req.user!.id, req.body);
+      res.status(201).json(toAnswerResponse(answer));
+    }
     catch (error) { next(error); }
   }
 
@@ -32,7 +39,10 @@ export class AnswersController {
   }
 
   async accept(req: Request, res: Response, next: NextFunction) {
-    try { res.status(200).json(await answersService.acceptAnswer(req.params.id, req.user!.id)); } 
+    try {
+      const answer = await answersService.acceptAnswer(req.params.id, req.user!.id);
+      res.status(200).json(toAnswerResponse(answer));
+    }
     catch (error) { next(error); }
   }
 }

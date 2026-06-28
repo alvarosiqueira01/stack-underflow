@@ -29,7 +29,7 @@ export class AnswersService {
             1
         );
 
-        return answer;
+        return answer.populate('authorId', 'name username avatarUrl reputation');
     }
 
     async updateAnswer(answerId: string, userId: string, userReputation: number, data: any) {
@@ -97,6 +97,7 @@ export class AnswersService {
 
         const acceptedAnswer =
             await answersRepository.markAccepted(answerId);
+        if (!acceptedAnswer) throw new Error('Answer not found');
 
         await questionsRepository.setAcceptedAnswer(
             answer.questionId.toString(),

@@ -32,7 +32,10 @@ export const answersRepository = {
           ? { createdAt: -1 }
           : { isAccepted: -1, voteCount: -1 };
 
-    return AnswerModel.find(filter).sort(sort).exec();
+    return AnswerModel.find(filter)
+      .sort(sort)
+      .populate('authorId', 'name username avatarUrl reputation')
+      .exec();
   },
 
   findByAuthorAndQuestion(questionId: string, authorId: string) {
@@ -72,7 +75,9 @@ export const answersRepository = {
       answerId,
       { $set: { isAccepted: true } },
       { new: true },
-    ).exec();
+    )
+      .populate('authorId', 'name username avatarUrl reputation')
+      .exec();
   },
 
   unmarkAcceptedForQuestion(questionId: string) {

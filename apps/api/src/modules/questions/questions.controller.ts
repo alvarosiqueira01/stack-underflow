@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { QuestionsService } from './questions.service';
+import { toQuestionResponse } from './questions.mapper';
 
 type AuthenticatedRequest = Request & {
   user?: {
@@ -29,7 +30,8 @@ export class QuestionsController {
       const questionId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       if (!questionId) throw new Error('Question id is required');
 
-      res.status(200).json(await questionsService.getQuestionDetail(questionId));
+      const question = await questionsService.getQuestionDetail(questionId);
+      res.status(200).json(toQuestionResponse(question));
     } 
     catch (error) { next(error); }
   }
