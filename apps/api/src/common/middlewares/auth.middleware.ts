@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.config';
 import { UserRole } from '../types/user.types';
+import { AUTH_COOKIE_NAME } from '../utils/auth-cookie.util';
 
 export interface JwtPayload {
   sub: string;
@@ -21,18 +22,20 @@ declare global {
 }
 
 /**
- * Verifica o JWT no header Authorization.
+ * Verifica o JWT no cookie httpOnly (browser) ou no header Authorization (clientes não-browser).
  * Rejeita com 401 se ausente ou inválido.
  */
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
+  const cookieToken = req.cookies?.[AUTH_COOKIE_NAME];
   const authHeader = req.headers.authorization;
+  const headerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
 
-  if (!authHeader?.startsWith('Bearer ')) {
+  const token = cookieToken ?? headerToken;
+
+  if (!token) {
     res.status(401).json({ message: 'Authentication is required.', code: 401 });
     return;
   }
-
-  const token = authHeader.split(' ')[1];
 
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;

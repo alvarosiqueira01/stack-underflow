@@ -69,22 +69,30 @@ export const SocialAuthSchema = registry.register(
     .openapi('SocialAuth'),
 );
 
-// -- AuthToken — success response
+// -- AuthSession — success response for login/social (token goes in an httpOnly cookie)
 
-export const AuthTokenSchema = registry.register(
-  'AuthToken',
+export const AuthSessionSchema = registry.register(
+  'AuthSession',
   z
     .object({
-      accessToken: z.string().openapi({
-        description: 'Signed JWT to be sent as `Authorization: Bearer <token>`.',
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      id: z.string().openapi({
+        description: 'MongoDB ObjectId of the authenticated user.',
+        example: '665f1a2b3c4d5e6f7a8b9c0d',
       }),
-      tokenType: z.string().default('Bearer').openapi({
-        description: 'Token type — always "Bearer".',
-        example: 'Bearer',
+      email: z.string().email().openapi({
+        description: 'E-mail address of the authenticated user.',
+        example: 'ada@stackunderflow.dev',
+      }),
+      username: z.string().openapi({
+        description: 'Username of the authenticated user.',
+        example: 'ada_lovelace',
+      }),
+      role: z.enum(['new_user', 'established', 'moderator', 'admin']).openapi({
+        description: 'Reputation-based role of the authenticated user.',
+        example: 'new_user',
       }),
     })
-    .openapi('AuthToken'),
+    .openapi('AuthSession'),
 );
 
 // -- AuthUser — registration response
@@ -105,7 +113,7 @@ export const AuthUserSchema = registry.register(
         description: 'Chosen username.',
         example: 'ada_lovelace',
       }),
-      role: z.enum(['new_user', 'user', 'established', 'moderator', 'admin']).openapi({
+      role: z.enum(['new_user', 'established', 'moderator', 'admin']).openapi({
         description: 'Reputation-based role assigned at account creation.',
         example: 'new_user',
       }),

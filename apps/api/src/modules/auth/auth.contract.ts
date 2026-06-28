@@ -1,7 +1,7 @@
 import { registry } from '../../common/openapi/registry';
 import { commonErrorResponses } from '../../common/schemas/error.schema';
 import {
-  AuthTokenSchema,
+  AuthSessionSchema,
   AuthUserSchema,
   LoginSchema,
   RegisterSchema,
@@ -16,8 +16,9 @@ registry.registerPath({
   tags: ['Auth'],
   summary: 'Login com e-mail e senha',
   description:
-    'Valida as credenciais fornecidas e retorna um JWT assinado ' +
-    'que deve ser enviado como `Authorization: Bearer <token>` nas requisições subsequentes.',
+    'Valida as credenciais fornecidas e define um cookie httpOnly (`access_token`) com o JWT assinado. ' +
+    'O navegador envia esse cookie automaticamente nas requisições subsequentes — não é necessário ' +
+    'armazenar ou manipular o token no cliente.',
   request: {
     body: {
       required: true,
@@ -27,8 +28,8 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Credenciais aceitas — token JWT retornado.',
-      content: { 'application/json': { schema: AuthTokenSchema } },
+      description: 'Credenciais aceitas — cookie de sessão definido e dados do usuário retornados.',
+      content: { 'application/json': { schema: AuthSessionSchema } },
     },
     400: commonErrorResponses[400],
     401: {
@@ -76,9 +77,9 @@ registry.registerPath({
   tags: ['Auth'],
   summary: 'Autenticar via provedor social',
   description:
-    'Troca um token OAuth (emitido por Apple, Facebook, GitHub ou Google) por um ' +
-    'JWT da plataforma. Se nenhuma conta estiver associada à identidade do provedor, ' +
-    'uma nova conta é criada automaticamente no nível **Novo Usuário**.',
+    'Troca um token OAuth (emitido por Apple, Facebook, GitHub ou Google) por uma sessão da plataforma, ' +
+    'definida como cookie httpOnly (`access_token`). Se nenhuma conta estiver associada à identidade do ' +
+    'provedor, uma nova conta é criada automaticamente no nível **Novo Usuário**.',
   request: {
     body: {
       required: true,
@@ -88,13 +89,26 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Token do provedor verificado — JWT da plataforma retornado.',
-      content: { 'application/json': { schema: AuthTokenSchema } },
+      description: 'Token do provedor verificado — cookie de sessão definido e dados do usuário retornados.',
+      content: { 'application/json': { schema: AuthSessionSchema } },
     },
     400: commonErrorResponses[400],
     401: {
       description: 'Não autorizado — token do provedor inválido ou expirado.',
       content: commonErrorResponses[401].content,
     },
+  },
+});
+
+// -- POST /api/auth/logout
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/auth/logout',
+  tags: ['Auth'],
+  summary: 'Encerrar sessão',
+  description: 'Limpa o cookie de sessão (`access_token`). Idempotente — pode ser chamado mesmo sem sessão ativa.',
+  responses: {
+    204: { description: 'Sessão encerrada — cookie removido.' },
   },
 });

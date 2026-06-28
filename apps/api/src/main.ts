@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 extendZodWithOpenApi(z);
 
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
@@ -31,6 +32,7 @@ import {
   loginController,
   registerController,
   socialAuthController,
+  logoutController,
 } from './modules/auth/auth.controller';
 import {
   reviewsListController,
@@ -61,8 +63,9 @@ const openApiDocument = generator.generateDocument({
 // ── App 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use(helmet()); // Adiciona headers de segurança
-app.use(cors());
+app.use(cors({ origin: env.CLIENT_URL, credentials: true })); // credentials: true permite enviar/receber o cookie httpOnly
 app.use(globalLimiter); // Rate limiting global
 
 // Swagger UI
@@ -78,6 +81,7 @@ app.get('/', (_req, res) => res.json({ name: 'StackUnderflow API', docs: '/docs'
 app.post('/api/auth/login', loginController);
 app.post('/api/auth/register', registerController);
 app.post('/api/auth/social', socialAuthController);
+app.post('/api/auth/logout', logoutController);
 
 // ── Rotas protegidas (requerem JWT) ───────────────────────────────────────────
 

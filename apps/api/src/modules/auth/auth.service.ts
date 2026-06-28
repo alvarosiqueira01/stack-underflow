@@ -31,7 +31,7 @@ export async function login(dto: LoginDto) {
 
   return {
     accessToken: generateToken({ id: user.id, email: user.email, username: user.username, role: user.role }),
-    tokenType: 'Bearer',
+    user: { id: user.id, email: user.email, username: user.username, role: user.role },
   };
 }
 
@@ -66,7 +66,10 @@ export async function register(dto: RegisterDto) {
   };
 }
 
-export async function socialAuth(dto: SocialAuthDto) {
+export async function socialAuth(dto: SocialAuthDto): Promise<{
+  accessToken: string;
+  user: { id: string; email: string; username: string; role: string };
+}> {
   // TODO: verificar token com o provedor (Apple/Facebook/GitHub/Google)
   throw { status: 501, message: `Social auth with ${dto.provider} not implemented yet.` };
 }
