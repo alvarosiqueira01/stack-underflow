@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { UsersService } from './users.service';
+import { toUserResponse } from './users.mapper';
 
 type AuthenticatedRequest = Request & {
   user?: {
@@ -21,7 +22,10 @@ export class UsersController {
   async getUsers(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await usersService.findAllUsers(req.query);
-      res.status(200).json(result);
+      res.status(200).json({
+        ...result,
+        users: result.users.map(toUserResponse),
+      });
     } catch (error) {
       next(error); // Encaminha o erro para o error.middleware.ts
     }
@@ -33,8 +37,8 @@ export class UsersController {
    */
   async getUserById(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const user = await usersService.findUserById(req.user!.id);
-      res.status(200).json(user);
+      const user = await usersService.findUserById(req.params.id);
+      res.status(200).json(toUserResponse(user));
     } catch (error) {
       next(error);
     }
@@ -54,7 +58,7 @@ export class UsersController {
       }
 
       const updatedUser = await usersService.updateProfile(req.user.id, req.body);
-      res.status(200).json(updatedUser);
+      res.status(200).json(toUserResponse(updatedUser));
     } catch (error) {
       next(error);
     }

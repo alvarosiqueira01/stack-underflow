@@ -76,9 +76,13 @@ export const UserResponseSchema = registry.register(
           'Accumulated reputation points earned through upvotes, accepted answers, etc.',
         example: 4820,
       }),
-      badges: z.array(BadgeSchema).openapi({
-        description: 'List of badges awarded to this user.',
-      }),
+      badges: z
+        .object({
+          gold: z.number().int().nonnegative().openapi({ example: 1 }),
+          silver: z.number().int().nonnegative().openapi({ example: 3 }),
+          bronze: z.number().int().nonnegative().openapi({ example: 8 }),
+        })
+        .openapi({ description: 'Badge counts grouped by tier.' }),
       createdAt: z.string().datetime().openapi({
         description: 'ISO-8601 timestamp of account creation.',
         example: '2023-11-15T09:30:00.000Z',

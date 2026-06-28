@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { setAuthCookie, clearAuthCookie } from '../../common/utils/auth-cookie.util';
 import { LoginSchema, RegisterSchema, SocialAuthSchema } from './auth.schema';
 import * as authService from './auth.service';
 
@@ -10,8 +11,9 @@ export async function loginController(req: Request, res: Response): Promise<void
   }
 
   try {
-    const result = await authService.login(parsed.data);
-    res.status(200).json(result);
+    const { accessToken, user } = await authService.login(parsed.data);
+    setAuthCookie(res, accessToken);
+    res.status(200).json(user);
   } catch (err: any) {
     res.status(err.status ?? 500).json({ message: err.message, code: err.status ?? 500 });
   }
@@ -40,9 +42,15 @@ export async function socialAuthController(req: Request, res: Response): Promise
   }
 
   try {
-    const result = await authService.socialAuth(parsed.data);
-    res.status(200).json(result);
+    const { accessToken, user } = await authService.socialAuth(parsed.data);
+    setAuthCookie(res, accessToken);
+    res.status(200).json(user);
   } catch (err: any) {
     res.status(err.status ?? 500).json({ message: err.message, code: err.status ?? 500 });
   }
+}
+
+export async function logoutController(req: Request, res: Response): Promise<void> {
+  clearAuthCookie(res);
+  res.status(204).send();
 }
