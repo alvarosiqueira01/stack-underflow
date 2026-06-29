@@ -39,6 +39,8 @@ import {
   reviewsGetController,
   reviewsActionController,
 } from './modules/reviews/reviews.controller';
+import { QuestionsController } from './modules/questions/questions.controller';
+import { AnswersController } from './modules/answers/answers.controller';
 
 // ── OpenAPI document ──────────────────────────────────────────────────────────
 const generator = new OpenApiGeneratorV31(registry.definitions);
@@ -89,6 +91,17 @@ app.post('/api/auth/logout', logoutController);
 app.get('/api/reviews',             authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsListController);
 app.get('/api/reviews/:id',         authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsGetController);
 app.post('/api/reviews/:id/action', authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsActionController);
+
+// Questions / Answers
+const questionsController = new QuestionsController();
+const answersController = new AnswersController();
+
+app.get('/api/questions/:id',                 questionsController.getDetail);
+app.get('/api/questions/:id/answers',         answersController.list);
+app.post('/api/questions/:id/vote',           authMiddleware, questionsController.vote);
+app.post('/api/questions/:id/answers',        authMiddleware, answersController.create);
+app.post('/api/answers/:id/vote',             authMiddleware, answersController.vote);
+app.post('/api/answers/:id/accept',           authMiddleware, answersController.accept);
 
 // Exemplo — descomentar conforme os módulos forem implementados:
 // app.get('/api/users/me/dashboard', authMiddleware, usersDashboardController);

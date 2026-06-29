@@ -17,6 +17,8 @@ Sidebar
 from
 "./sidebar";
 
+import { AuthPromptModal } from "../auth/auth-prompt-modal";
+
 export function AppShell({
 children,
 authenticated
@@ -59,6 +61,8 @@ p-8
 </main>
 
 </div>
+
+<AuthPromptModal />
 
 </div>
 

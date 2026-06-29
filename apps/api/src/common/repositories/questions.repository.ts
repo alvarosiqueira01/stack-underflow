@@ -5,6 +5,8 @@ import {
   type PaginationOptions,
 } from "./pagination";
 import { QuestionModel, type Question } from "../models/questions.model";
+// Garante que o schema "Tag" esteja registrado no Mongoose antes do populate('tags') abaixo.
+import "../models/tags.model";
 
 type CreateQuestionData = Pick<Question, "title" | "body" | "authorId" | "tags"> &
   Partial<Pick<Question, "expectedResult">>;
@@ -93,7 +95,10 @@ export const questionsRepository = {
       id,
       { $inc: { viewCount: 1 } },
       { new: true },
-    ).exec();
+    )
+      .populate('authorId', 'name username avatarUrl reputation')
+      .populate('tags', 'name')
+      .exec();
   },
 
   updateVoteCount(id: string, value: number) {

@@ -1,100 +1,49 @@
 "use client";
 
-import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  CompaniesIcon,
+  HomeIcon,
+  QuestionsIcon,
+  TagsIcon,
+  UsersIcon,
+} from "../icons/nav-icons";
+import { NavItem } from "./nav-item";
 
-const menu=[
-
-["Home","/"],
-["Questions","/questions"],
-["Tags","/tags"],
-["Users","/users"],
-["Companies","/companies"]
-
+const menu = [
+  { label: "Home", href: "/", icon: HomeIcon },
+  { label: "Questions", href: "/questions", icon: QuestionsIcon },
+  { label: "Tags", href: "/tags", icon: TagsIcon },
+  { label: "Users", href: "/users", icon: UsersIcon },
+  { label: "Companies", href: "/companies", icon: CompaniesIcon },
 ];
 
-export function Sidebar(){
+type Props = {
+  authenticated?: boolean;
+};
 
-return(
+export function Sidebar({ authenticated }: Props) {
+  const pathname = usePathname();
 
-<aside
-className="
-w-[180px]
-border-r
-bg-[#F8F9F9]
-min-h-screen
-"
->
+  return (
+    <aside className="w-[180px] border-r bg-[#F8F9F9] min-h-screen">
+      <div className="pt-3">
+        {menu.map(({ label, href, icon: Icon }) => (
+          <NavItem
+            key={label}
+            label={label}
+            href={href}
+            active={href === "/" ? pathname === "/" : pathname.startsWith(href)}
+            icon={<Icon className="h-5 w-5" />}
+          />
+        ))}
+      </div>
 
-<div
-className="
-pt-3
-"
->
-
-{
-menu.map(
-([label,href])=>(
-
-<Link
-
-key=
-{label}
-
-href=
-{href}
-
-className="
-block
-px-5
-py-3
-hover:bg-white
-"
-
->
-
-{label}
-
-</Link>
-
-)
-)
-
-}
-
-</div>
-
-<div
-className="
-absolute
-bottom-6
-left-5
-space-y-2
-text-sm
-"
->
-
-<div>
-
-Help
-
-</div>
-
-<div>
-
-Documentation
-
-</div>
-
-<div>
-
-Leaderboard
-
-</div>
-
-</div>
-
-</aside>
-
-);
-
+      <div className="absolute bottom-6 left-5 space-y-2 text-sm">
+        <div>Help</div>
+        <div>Documentation</div>
+        {authenticated && <div>Leaderboard</div>}
+      </div>
+    </aside>
+  );
 }
