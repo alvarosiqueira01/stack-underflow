@@ -59,3 +59,30 @@ export function CompaniesIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function ReviewIcon({ className }: IconProps) {
+  return (
+    <svg {...base} fill="currentColor" stroke="none" className={className}>
+      <path d="M12 2 22 12 12 22 2 12Z" />
+    </svg>
+  );
+}
+
+export function InboxIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M3 13h4.5l1.5 3h6l1.5-3H21" />
+      <path d="M5.5 5h13a2 2 0 0 1 1.94 1.52L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5l1.56-6.48A2 2 0 0 1 5.5 5Z" />
+    </svg>
+  );
+}
+
+export function BellIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M6 17V11a6 6 0 1 1 12 0v6" />
+      <path d="M4.5 17h15" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
+    </svg>
+  );
+}

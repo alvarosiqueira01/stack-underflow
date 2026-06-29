@@ -26,7 +26,7 @@ export function Sidebar({ authenticated }: Props) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[180px] border-r bg-[#F8F9F9] min-h-screen">
+    <aside className="w-[180px] border-r border-zinc-200 bg-[#F8F9F9] min-h-screen">
       <div className="pt-3">
         {menu.map(({ label, href, icon: Icon }) => (
           <NavItem

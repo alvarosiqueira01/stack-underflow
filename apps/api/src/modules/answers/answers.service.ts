@@ -1,6 +1,11 @@
 import { answersRepository } from '../../common/repositories/answers.repository';
 import { questionsRepository } from '../../common/repositories/questions.repository';
 import { usersRepository } from '../../common/repositories/users.repository';
+import { HttpError } from '../../common/errors/http-error';
+import { resolveVote, reputationFor } from '../../common/services/voting.service';
+
+const ANSWER_UPVOTE_POINTS = 10;
+const ANSWER_DOWNVOTE_PENALTY = -2;
 
 export class AnswersService {
     async getAnswersByQuestion(questionId: string) {
@@ -15,7 +20,7 @@ export class AnswersService {
             );
 
         if (existingAnswer) {
-            throw new Error('User already answered this question');
+            throw new HttpError(409, 'User already answered this question');
         }
 
         const answer = await answersRepository.create({
@@ -34,10 +39,10 @@ export class AnswersService {
 
     async updateAnswer(answerId: string, userId: string, userReputation: number, data: any) {
         const answer = await answersRepository.findById(answerId);
-        if (!answer) throw new Error('Answer not found');
+        if (!answer) throw new HttpError(404, 'Answer not found');
 
         if (answer.authorId.toString() !== userId && userReputation < 200) {
-            throw new Error('Forbidden: Not enough reputation to edit');
+            throw new HttpError(403, 'Forbidden: Not enough reputation to edit');
         }
 
         return answersRepository.updateById(
@@ -48,11 +53,11 @@ export class AnswersService {
 
     async deleteAnswer(answerId: string, userId: string, userRole: string) {
         const answer = await answersRepository.findById(answerId);
-        if (!answer) throw new Error('Answer not found');
+        if (!answer) throw new HttpError(404, 'Answer not found');
 
         if (userRole !== 'moderator') {
-            if (answer.authorId.toString() !== userId) throw new Error('Forbidden: Not author');
-            if (answer.isAccepted || answer.voteCount > 0) throw new Error('Forbidden: Cannot delete accepted or upvoted answers');
+            if (answer.authorId.toString() !== userId) throw new HttpError(403, 'Forbidden: Not author');
+            if (answer.isAccepted || answer.voteCount > 0) throw new HttpError(403, 'Forbidden: Cannot delete accepted or upvoted answers');
         }
 
         await questionsRepository.updateAnswerCount(
@@ -65,39 +70,52 @@ export class AnswersService {
     }
 
     async voteAnswer(answerId: string, userId: string, value: number) {
-        const answer =
-            await answersRepository.updateVoteCount(
-                answerId,
-                value
-            );
+        if (value !== 1 && value !== -1) throw new HttpError(400, 'value must be 1 or -1');
 
-        // +10 por upvote, -2 por downvote na reputação do autor
-        const repChange = value === 1 ? 10 : -2;
-        await usersRepository.incrementReputation(
-            answer!.authorId.toString(),
-            repChange
+        const existingAnswer = await answersRepository.findById(answerId);
+        if (!existingAnswer) throw new HttpError(404, 'Answer not found');
+        if (existingAnswer.authorId.toString() === userId) {
+            throw new HttpError(403, 'You cannot vote on your own answer');
+        }
+
+        const { voteCountDelta, userVote, previousValue } = await resolveVote(
+            userId,
+            'answer',
+            answerId,
+            value,
         );
-        return { votes: answer!.voteCount, userVote: value };
+
+        const answer = await answersRepository.updateVoteCount(answerId, voteCountDelta);
+        if (!answer) throw new HttpError(404, 'Answer not found');
+
+        const repChange =
+            reputationFor(userVote, ANSWER_UPVOTE_POINTS, ANSWER_DOWNVOTE_PENALTY) -
+            reputationFor(previousValue, ANSWER_UPVOTE_POINTS, ANSWER_DOWNVOTE_PENALTY);
+        if (repChange !== 0) {
+            await usersRepository.incrementReputation(answer.authorId.toString(), repChange);
+        }
+
+        return { votes: answer.voteCount, userVote };
     }
 
     async acceptAnswer(answerId: string, userId: string) {
         const answer = await answersRepository.findById(answerId);
-        if (!answer) throw new Error('Answer not found');
+        if (!answer) throw new HttpError(404, 'Answer not found');
 
         const questionId = answer.questionId.toString();
         const question = await questionsRepository.findById(questionId);
         if (!question || question.authorId.toString() !== userId) {
-            throw new Error('Forbidden: Only question author can accept answers');
+            throw new HttpError(403, 'Forbidden: Only question author can accept answers');
         }
 
         await answersRepository.unmarkAcceptedForQuestion(
             answer.questionId.toString()
-    
+
         );
 
         const acceptedAnswer =
             await answersRepository.markAccepted(answerId);
-        if (!acceptedAnswer) throw new Error('Answer not found');
+        if (!acceptedAnswer) throw new HttpError(404, 'Answer not found');
 
         await questionsRepository.setAcceptedAnswer(
             answer.questionId.toString(),

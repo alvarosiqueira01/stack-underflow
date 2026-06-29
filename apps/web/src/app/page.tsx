@@ -101,6 +101,7 @@ key=
 
 className="
 border-b
+border-zinc-200
 p-6
 "
 

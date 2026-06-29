@@ -79,6 +79,10 @@ export const AuthSessionSchema = registry.register(
         description: 'MongoDB ObjectId of the authenticated user.',
         example: '665f1a2b3c4d5e6f7a8b9c0d',
       }),
+      name: z.string().openapi({
+        description: 'Full display name of the authenticated user.',
+        example: 'Ada Lovelace',
+      }),
       email: z.string().email().openapi({
         description: 'E-mail address of the authenticated user.',
         example: 'ada@stackunderflow.dev',
@@ -91,6 +95,34 @@ export const AuthSessionSchema = registry.register(
         description: 'Reputation-based role of the authenticated user.',
         example: 'new_user',
       }),
+      reputation: z.number().int().nonnegative().openapi({
+        description: 'Accumulated reputation points.',
+        example: 1200,
+      }),
+      badges: z
+        .object({
+          gold: z.number().int().nonnegative().openapi({ example: 1 }),
+          silver: z.number().int().nonnegative().openapi({ example: 3 }),
+          bronze: z.number().int().nonnegative().openapi({ example: 8 }),
+        })
+        .openapi({ description: 'Badge counts grouped by tier.' }),
+      permissions: z
+        .object({
+          canComment: z.boolean().openapi({
+            description: 'Whether the user has enough reputation to post comments.',
+            example: true,
+          }),
+          canCreateTag: z.boolean().openapi({
+            description: 'Whether the user has enough reputation to create new tags.',
+            example: false,
+          }),
+        })
+        .openapi({
+          description:
+            'Capacidades derivadas da reputação atual — o frontend usa isso para ' +
+            'decidir o que mostrar (ex: esconder "Add a comment") sem precisar tentar ' +
+            'a ação e receber 403.',
+        }),
     })
     .openapi('AuthSession'),
 );

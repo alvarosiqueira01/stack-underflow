@@ -1,31 +1,15 @@
-type Props =
-React.InputHTMLAttributes<
-HTMLInputElement
->;
+import clsx from "clsx";
 
-export function Input(
-props:Props
-){
+type Props = React.InputHTMLAttributes<HTMLInputElement>;
 
-return(
-
-<input
-{...props}
-
-className="
-w-full
-rounded-xl
-border
-border-zinc-200
-bg-white
-px-5
-py-4
-text-zinc-700
-outline-none
-focus:border-[#2F6BFF]
-"
-/>
-
-);
-
+export function Input({ className, ...props }: Props) {
+  return (
+    <input
+      {...props}
+      className={clsx(
+        "w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-zinc-700 outline-none focus:border-[#2F6BFF]",
+        className,
+      )}
+    />
+  );
 }

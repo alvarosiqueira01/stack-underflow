@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { QueryProvider } from "@/lib/api/query-provider";
+import { SessionBootstrap } from "@/features/auth/components/session-bootstrap";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +30,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <SessionBootstrap />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

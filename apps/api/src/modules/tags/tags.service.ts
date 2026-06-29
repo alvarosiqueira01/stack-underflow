@@ -1,6 +1,7 @@
 import { tagsRepository } from '../../common/repositories/tags.repository';
 import { userTagPreferencesRepository }
     from '../../common/repositories/user-tag-preferences.repository';
+import { HttpError } from '../../common/errors/http-error';
 
 // Minimal local slugify implementation to avoid requiring the external 'slugify' package
 function slugify(input: string) {
@@ -28,9 +29,7 @@ export class TagsService {
                     limit,
                     search: query.search
                 }),
-                tagsRepository.count({
-                    search: query.search
-                })
+                tagsRepository.count(query.search)
             ]);
 
         return { tags, meta: { currentPage: page, pageSize: limit, totalItems, totalPages: Math.ceil(totalItems / limit) } };
@@ -39,18 +38,17 @@ export class TagsService {
     async getTagById(tagId: string) {
         const tag =
             await tagsRepository.findById(tagId);
-        if (!tag) throw new Error('Tag not found');
+        if (!tag) throw new HttpError(404, 'Tag not found');
         return tag;
     }
 
     async createTag(data: any) {
-        const existing =
-            await tagsRepository.findBySlug(
-                slugify(data.name)
-            );
-        if (existing) throw new Error('Tag already exists');
+        const slug = slugify(data.name);
 
-        return tagsRepository.create(data);
+        const existing = await tagsRepository.findBySlug(slug);
+        if (existing) throw new HttpError(409, `Tag '${data.name}' already exists.`);
+
+        return tagsRepository.create({ ...data, slug });
     }
 
     async updateTagPreferences(userId: string, action: 'watch' | 'ignore', tags: string[]) {

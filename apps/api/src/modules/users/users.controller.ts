@@ -70,7 +70,7 @@ export class UsersController {
    */
   async getActivity(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const activityFeed = await usersService.getUserActivityFeed(req.user!.id, req.query);
+      const activityFeed = await usersService.getUserActivityFeed(req.params.id, req.query);
       res.status(200).json(activityFeed);
     } catch (error) {
       next(error);

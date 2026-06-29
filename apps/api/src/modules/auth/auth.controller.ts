@@ -54,3 +54,12 @@ export async function logoutController(req: Request, res: Response): Promise<voi
   clearAuthCookie(res);
   res.status(204).send();
 }
+
+export async function sessionController(req: Request, res: Response): Promise<void> {
+  try {
+    const user = await authService.getSession(req.user!.id);
+    res.status(200).json(user);
+  } catch (err: any) {
+    res.status(err.status ?? 500).json({ message: err.message, code: err.status ?? 500 });
+  }
+}
