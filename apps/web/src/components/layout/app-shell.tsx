@@ -33,10 +33,7 @@ bg-[#F8F9FA]
 "
 >
 
-<Navbar
-authenticated=
-{authenticated}
-/>
+<Navbar />
 
 <div
 className="

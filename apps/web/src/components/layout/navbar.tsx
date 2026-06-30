@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/features/auth/stores/auth.store";
+import { loginHref } from "@/features/auth/utils/login-href";
+import { UserMenu } from "./user-menu";
 
-type Props = {
-  authenticated?: boolean;
-};
+export function Navbar() {
+  const pathname = usePathname();
+  const user = useAuthStore((state) => state.user);
 
-export function Navbar({ authenticated }: Props) {
   return (
-    <header className="h-16 bg-white border-b flex items-center justify-between px-6 gap-6">
+    <header className="h-16 bg-white border-b border-zinc-200 flex items-center justify-between px-6 gap-6">
       <div className="flex items-center gap-8">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-500 rounded-xl text-white text-sm font-semibold flex items-center justify-center">
@@ -54,20 +57,18 @@ export function Navbar({ authenticated }: Props) {
       </div>
 
       <div className="flex items-center gap-3">
-        {authenticated ? (
-          <Link href="/profile" className="text-sm font-medium text-zinc-700">
-            Profile
-          </Link>
+        {user ? (
+          <UserMenu user={user} />
         ) : (
           <>
             <Link
-              href="/login"
+              href={loginHref(pathname)}
               className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
             >
               Log in
             </Link>
             <Link
-              href="/login"
+              href={loginHref(pathname, "register")}
               className="rounded-lg bg-[#2F6BFF] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
             >
               Sign up

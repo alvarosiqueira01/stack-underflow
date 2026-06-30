@@ -39,6 +39,16 @@ export async function acceptAnswer(answerId: string): Promise<Answer> {
   return response.data;
 }
 
+export async function getQuestionComments(questionId: string): Promise<Comment[]> {
+  const response = await httpClient.get<Comment[]>(`/api/questions/${questionId}/comments`);
+  return response.data;
+}
+
+export async function getAnswerComments(answerId: string): Promise<Comment[]> {
+  const response = await httpClient.get<Comment[]>(`/api/answers/${answerId}/comments`);
+  return response.data;
+}
+
 export async function postQuestionComment(questionId: string, body: string): Promise<Comment> {
   const response = await httpClient.post<Comment>(`/api/questions/${questionId}/comments`, {
     body,

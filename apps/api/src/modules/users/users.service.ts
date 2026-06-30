@@ -1,6 +1,7 @@
 import { usersRepository } from '../../common/repositories/users.repository';
 import { questionsRepository } from '../../common/repositories/questions.repository';
 import { answersRepository } from '../../common/repositories/answers.repository';
+import { HttpError } from '../../common/errors/http-error';
 
 export class UsersService {
     /**
@@ -56,7 +57,7 @@ export class UsersService {
         const user =
             await usersRepository.findById(id);
         if (!user) {
-            throw new Error('User not found');
+            throw new HttpError(404, 'User not found');
         }
         return user;
     }
@@ -67,7 +68,7 @@ export class UsersService {
      */
     async updateProfile(userId: string, updateData: any) {
         // Sanitização estrita: impede a alteração maliciosa de dados protegidos como reputação ou papéis
-        const allowedUpdates = ['displayName', 'bio', 'location', 'website', 'avatarUrl'];
+        const allowedUpdates = ['name', 'bio', 'location', 'website', 'avatarUrl'];
         const sanitizedData: any = {};
 
         for (const key of allowedUpdates) {
@@ -77,7 +78,7 @@ export class UsersService {
         }
 
         if (Object.keys(sanitizedData).length === 0) {
-            throw new Error('No valid fields provided for update');
+            throw new HttpError(400, 'No valid fields provided for update');
         }
 
         const updatedUser =
@@ -87,7 +88,7 @@ export class UsersService {
             );
 
         if (!updatedUser) {
-            throw new Error('User not found');
+            throw new HttpError(404, 'User not found');
         }
 
         return updatedUser;
@@ -123,7 +124,7 @@ export class UsersService {
      */
     async getDashboardStats(userId: string) {
         const user = await usersRepository.findById(userId);
-        if (!user) throw new Error('User not found');
+        if (!user) throw new HttpError(404, 'User not found');
 
         // Normalize stats whether repository returns an array (aggregation result) or an object
         const rawStats = await usersRepository.getDashboardStats(userId);

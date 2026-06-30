@@ -5,8 +5,9 @@ type CreateCommentData = Pick<Comment, "body" | "authorId" | "targetType" | "tar
 type UpdateCommentData = Partial<Pick<Comment, "body" | "status">>;
 
 export const commentsRepository = {
-  create(data: CreateCommentData) {
-    return CommentModel.create(data);
+  async create(data: CreateCommentData) {
+    const comment = await CommentModel.create(data);
+    return comment.populate('authorId', 'name username avatarUrl reputation');
   },
 
   findById(id: string) {
@@ -16,6 +17,7 @@ export const commentsRepository = {
   findByTarget(targetType: CommentTargetType, targetId: string) {
     return CommentModel.find({ targetType, targetId, status: "visible" })
       .sort({ createdAt: 1 })
+      .populate('authorId', 'name username avatarUrl reputation')
       .exec();
   },
 

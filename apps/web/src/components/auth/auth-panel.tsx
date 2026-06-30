@@ -1,135 +1,35 @@
 "use client";
 
-import {
-useState
-}
-from
-"react";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { LoginForm } from "./login-form";
+import { RegisterForm } from "./register-form";
 
-import {
-LoginForm
-}
-from
-"./login-form";
+export function AuthPanel() {
+  const searchParams = useSearchParams();
+  const [isLogin, setIsLogin] = useState(searchParams.get("tab") !== "register");
 
-import {
-RegisterForm
-}
-from
-"./register-form";
+  return (
+    <>
+      <div className="grid grid-cols-2 rounded-xl bg-zinc-100 p-1 mb-6">
+        <button
+          type="button"
+          onClick={() => setIsLogin(true)}
+          className={isLogin ? "rounded-lg bg-white py-2 font-medium shadow-sm" : "py-2 text-zinc-500"}
+        >
+          Sign In
+        </button>
 
-export function AuthPanel(){
+        <button
+          type="button"
+          onClick={() => setIsLogin(false)}
+          className={!isLogin ? "rounded-lg bg-white py-2 font-medium shadow-sm" : "py-2 text-zinc-500"}
+        >
+          Create Account
+        </button>
+      </div>
 
-const[
-login,
-setLogin
-]
-=
-useState(
-true
-);
-
-return(
-
-<>
-
-<div
-className="
-grid
-grid-cols-2
-rounded-xl
-bg-zinc-100
-p-1
-mb-10
-"
->
-
-<button
-
-onClick=
-{
-()=>
-setLogin(
-true
-)
-}
-
-className={
-
-login
-
-?
-
-"rounded-lg bg-white py-3"
-
-:
-
-"py-3"
-
-}
-
->
-
-Sign In
-
-</button>
-
-<button
-
-onClick=
-{
-()=>
-setLogin(
-false
-)
-}
-
-className={
-
-!login
-
-?
-
-"rounded-lg bg-white py-3"
-
-:
-
-"py-3"
-
-}
-
->
-
-Create Account
-
-</button>
-
-</div>
-
-<div
-className="
-transition-all
-duration-300
-"
->
-
-{
-login
-
-?
-
-<LoginForm/>
-
-:
-
-<RegisterForm/>
-
-}
-
-</div>
-
-</>
-
-);
-
+      <div className="transition-all duration-300">{isLogin ? <LoginForm /> : <RegisterForm />}</div>
+    </>
+  );
 }

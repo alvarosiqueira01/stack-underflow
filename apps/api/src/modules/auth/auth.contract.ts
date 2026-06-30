@@ -112,3 +112,26 @@ registry.registerPath({
     204: { description: 'Sessão encerrada — cookie removido.' },
   },
 });
+
+// -- GET /api/auth/session
+
+const bearerAuth = [{ bearerAuth: [] }];
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/auth/session',
+  tags: ['Auth'],
+  summary: 'Sessão atual',
+  description:
+    'Retorna os dados do usuário autenticado a partir do cookie de sessão. ' +
+    'Usado pelo frontend para restaurar a sessão após reload da página, já que ' +
+    'o JWT nunca é exposto ao JavaScript do cliente.',
+  security: bearerAuth,
+  responses: {
+    200: {
+      description: 'Sessão válida — dados do usuário retornados.',
+      content: { 'application/json': { schema: AuthSessionSchema } },
+    },
+    401: commonErrorResponses[401],
+  },
+});

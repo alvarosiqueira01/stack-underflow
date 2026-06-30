@@ -8,7 +8,7 @@ type Props = {
 
 export function AnswersSectionHeader({ answerCount, sortBy, onSortChange }: Props) {
   return (
-    <div className="flex items-center justify-between border-b pb-3">
+    <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
       <h2 className="text-lg font-semibold text-zinc-900">{answerCount} Answers</h2>
 
       <select

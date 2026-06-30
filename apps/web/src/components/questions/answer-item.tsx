@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { useRequireAuth } from "@/features/auth/hooks/use-require-auth";
+import { useAuthStore } from "@/features/auth/stores/auth.store";
+import { useAnswerComments } from "@/features/questions/hooks/use-answer-comments";
 import { usePostAnswerComment } from "@/features/questions/hooks/use-post-comment";
-import type { Answer, Comment, VoteValue } from "@/features/questions/types";
+import type { Answer, VoteValue } from "@/features/questions/types";
+import { extractErrorMessage } from "@/lib/api/extract-error-message";
 import { AuthorCard } from "./author-card";
 import { CommentList } from "./comment-list";
 import { PostActions } from "./post-actions";
@@ -19,12 +22,14 @@ type Props = {
 
 export function AnswerItem({ answer, isAuthenticated, isQuestionAuthor, onVote, onAccept }: Props) {
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const postComment = usePostAnswerComment();
+  const { data: comments } = useAnswerComments(answer.id);
+  const postComment = usePostAnswerComment(answer.id);
   const requireAuth = useRequireAuth();
+  const user = useAuthStore((state) => state.user);
+  const canComment = !user || user.permissions.canComment;
 
   return (
-    <div className="flex gap-4 border-b py-6">
+    <div className="flex gap-4 border-b border-zinc-200 py-6">
       <VoteControl
         votes={answer.votes}
         userVote={answer.userVote}
@@ -59,16 +64,14 @@ export function AnswerItem({ answer, isAuthenticated, isQuestionAuthor, onVote, 
         </div>
 
         <CommentList
-          comments={comments}
+          comments={comments ?? []}
           isFormOpen={isCommentFormOpen}
+          canComment={canComment}
+          errorMessage={postComment.isError ? extractErrorMessage(postComment.error) : null}
           onToggleForm={() => requireAuth(() => setIsCommentFormOpen(true))}
           onSubmit={(text) =>
             requireAuth(() => {
-              postComment.mutate(
-                { answerId: answer.id, body: text },
-                { onSuccess: (comment) => setComments((prev) => [...prev, comment]) },
-              );
-              setIsCommentFormOpen(false);
+              postComment.mutate(text, { onSuccess: () => setIsCommentFormOpen(false) });
             })
           }
         />

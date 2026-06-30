@@ -12,6 +12,7 @@ import { connectToDatabase } from './config/db.config';
 import { env } from './config/env.config';
 
 import { authMiddleware, requireRole, requireReputation } from './common/middlewares/auth.middleware';
+import { REPUTATION_THRESHOLDS } from './common/constants/reputation-thresholds';
 import { validateRequest } from './common/middlewares/validate.middleware';
 import { errorMiddleware } from './common/middlewares/error.middleware';
 import { globalLimiter, authLimiter } from './common/middlewares/rate-limit.middleware';
@@ -33,6 +34,7 @@ import {
   registerController,
   socialAuthController,
   logoutController,
+  sessionController,
 } from './modules/auth/auth.controller';
 import {
   reviewsListController,
@@ -41,6 +43,9 @@ import {
 } from './modules/reviews/reviews.controller';
 import { QuestionsController } from './modules/questions/questions.controller';
 import { AnswersController } from './modules/answers/answers.controller';
+import { TagsController } from './modules/tags/tags.controller';
+import { UsersController } from './modules/users/users.controller';
+import { CommentsController } from './modules/comments/comments.controller';
 
 // ── OpenAPI document ──────────────────────────────────────────────────────────
 const generator = new OpenApiGeneratorV31(registry.definitions);
@@ -84,6 +89,7 @@ app.post('/api/auth/login', loginController);
 app.post('/api/auth/register', registerController);
 app.post('/api/auth/social', socialAuthController);
 app.post('/api/auth/logout', logoutController);
+app.get('/api/auth/session', authMiddleware, sessionController);
 
 // ── Rotas protegidas (requerem JWT) ───────────────────────────────────────────
 
@@ -92,22 +98,52 @@ app.get('/api/reviews',             authMiddleware, requireRole('established', '
 app.get('/api/reviews/:id',         authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsGetController);
 app.post('/api/reviews/:id/action', authMiddleware, requireRole('established', 'moderator', 'admin'), reviewsActionController);
 
-// Questions / Answers
+// Questions
 const questionsController = new QuestionsController();
+
+app.get('/api/questions',                     questionsController.list);
+app.post('/api/questions',                    authMiddleware, questionsController.create);
+app.get('/api/questions/:id',                 questionsController.getDetail);
+app.put('/api/questions/:id',                 authMiddleware, questionsController.update);
+app.delete('/api/questions/:id',              authMiddleware, questionsController.remove);
+app.post('/api/questions/:id/vote',           authMiddleware, questionsController.vote);
+app.post('/api/questions/:id/close',          authMiddleware, requireRole('moderator', 'admin'), questionsController.close);
+
+// Answers
 const answersController = new AnswersController();
 
-app.get('/api/questions/:id',                 questionsController.getDetail);
 app.get('/api/questions/:id/answers',         answersController.list);
-app.post('/api/questions/:id/vote',           authMiddleware, questionsController.vote);
 app.post('/api/questions/:id/answers',        authMiddleware, answersController.create);
+app.put('/api/answers/:id',                   authMiddleware, answersController.update);
+app.delete('/api/answers/:id',                authMiddleware, answersController.remove);
 app.post('/api/answers/:id/vote',             authMiddleware, answersController.vote);
 app.post('/api/answers/:id/accept',           authMiddleware, answersController.accept);
 
-// Exemplo — descomentar conforme os módulos forem implementados:
-// app.get('/api/users/me/dashboard', authMiddleware, usersDashboardController);
-// app.put('/api/users/me', authMiddleware, usersUpdateController);
-// app.post('/api/questions', authMiddleware, questionsCreateController);
-// app.delete('/api/questions/:id', authMiddleware, requireRole('moderator'), questionsDeleteController);
+// Comments
+const commentsController = new CommentsController();
+
+app.get('/api/questions/:id/comments',        commentsController.listForQuestion);
+app.post('/api/questions/:id/comments',       authMiddleware, requireReputation(REPUTATION_THRESHOLDS.COMMENT), commentsController.createForQuestion);
+app.get('/api/answers/:id/comments',          commentsController.listForAnswer);
+app.post('/api/answers/:id/comments',         authMiddleware, requireReputation(REPUTATION_THRESHOLDS.COMMENT), commentsController.createForAnswer);
+
+// Tags
+const tagsController = new TagsController();
+
+app.get('/api/tags',                          tagsController.list);
+app.get('/api/tags/:id',                      tagsController.getDetail);
+app.post('/api/tags',                         authMiddleware, requireReputation(REPUTATION_THRESHOLDS.CREATE_TAG), tagsController.create);
+app.post('/api/users/me/tags/watch',          authMiddleware, tagsController.watchTags);
+app.post('/api/users/me/tags/ignore',         authMiddleware, tagsController.ignoreTags);
+
+// Users
+const usersController = new UsersController();
+
+app.get('/api/users',                         usersController.getUsers);
+app.get('/api/users/:id',                     usersController.getUserById);
+app.put('/api/users/me',                      authMiddleware, usersController.updateMe);
+app.get('/api/users/:id/activity',            usersController.getActivity);
+app.get('/api/users/me/dashboard',            authMiddleware, usersController.getDashboard);
 
 // ── Tratamento de Erros Global ────────────────────────────────────────────────
 app.use(errorMiddleware);

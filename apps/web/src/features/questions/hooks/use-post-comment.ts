@@ -1,19 +1,22 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { postAnswerComment, postQuestionComment } from "../api/questions.api";
 
-// A API não expõe um GET para listar comentários — só criação.
-// Por isso essas mutations não invalidam nenhuma query; quem chama
-// é responsável por anexar o comentário retornado ao estado local.
-
 export function usePostQuestionComment(questionId: string) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (body: string) => postQuestionComment(questionId, body),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["comments", "question", questionId] }),
   });
 }
 
-export function usePostAnswerComment() {
+export function usePostAnswerComment(answerId: string) {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ answerId, body }: { answerId: string; body: string }) =>
-      postAnswerComment(answerId, body),
+    mutationFn: (body: string) => postAnswerComment(answerId, body),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["comments", "answer", answerId] }),
   });
 }

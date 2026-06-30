@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuthPromptStore } from "@/features/auth/stores/auth-prompt.store";
+import { loginHref } from "@/features/auth/utils/login-href";
 
 export function AuthPromptModal() {
   const isOpen = useAuthPromptStore((state) => state.isOpen);
   const close = useAuthPromptStore((state) => state.close);
+  const pathname = usePathname();
 
   if (!isOpen) return null;
 
@@ -25,14 +28,14 @@ export function AuthPromptModal() {
 
         <div className="mt-6 flex gap-3">
           <Link
-            href="/login"
+            href={loginHref(pathname)}
             onClick={close}
             className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
           >
             Log in
           </Link>
           <Link
-            href="/login"
+            href={loginHref(pathname, "register")}
             onClick={close}
             className="flex-1 rounded-xl bg-[#2F6BFF] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
           >
