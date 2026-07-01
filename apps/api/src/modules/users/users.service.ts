@@ -1,7 +1,10 @@
 import { usersRepository } from '../../common/repositories/users.repository';
 import { questionsRepository } from '../../common/repositories/questions.repository';
 import { answersRepository } from '../../common/repositories/answers.repository';
+import { userTagPreferencesRepository } from '../../common/repositories/userTagPreferences.repository';
 import { HttpError } from '../../common/errors/http-error';
+import { ObjectId } from 'mongoose';
+import { tagsRepository } from '../../common/repositories/tags.repository';
 
 export class UsersService {
     /**
@@ -153,5 +156,37 @@ export class UsersService {
             acceptanceRate,
             topTags: topTagsAggregation
         };
+    }
+
+    async getTagPreferences(userId: string) {
+        const prefs = await userTagPreferencesRepository.findByUser(userId);
+
+        return {
+            watchedTags: prefs
+                .filter(p => p.status === "watching")
+                .map(p => (p.tagId as any).slug),
+
+            ignoredTags: prefs
+                .filter(p => p.status === "ignoring")
+                .map(p => (p.tagId as any).slug),
+            };
+    }
+
+    async updateTagPreferences(
+        userId: string,
+        tagSlug: string,
+        action: "watch" | "ignore",
+    ) {
+        const tag = await tagsRepository.findBySlug(tagSlug);
+
+        if (!tag) {
+            throw new HttpError(404, "Tag not found");
+        }
+
+        await userTagPreferencesRepository.setPreference(
+            userId,
+            tag._id.toString(),
+            action === "watch" ? "watching" : "ignoring"
+        );
     }
 }

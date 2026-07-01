@@ -1,7 +1,7 @@
 import {
   UserTagPreferenceModel,
   type tagPreferenceStatuses,
-} from "../models/user-tag-preferences.model";
+} from "../models/userTagPreferences.model";
 
 type TagPreferenceStatus = (typeof tagPreferenceStatuses)[number];
 
@@ -25,4 +25,5 @@ export const userTagPreferencesRepository = {
   findStatus(userId: string, tagId: string) {
     return UserTagPreferenceModel.findOne({ userId, tagId }).exec();
   },
+
 };

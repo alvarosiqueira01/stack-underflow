@@ -1,6 +1,6 @@
 import { tagsRepository } from '../../common/repositories/tags.repository';
 import { userTagPreferencesRepository }
-    from '../../common/repositories/user-tag-preferences.repository';
+    from '../../common/repositories/userTagPreferences.repository';
 import { HttpError } from '../../common/errors/http-error';
 
 // Minimal local slugify implementation to avoid requiring the external 'slugify' package
@@ -36,8 +36,7 @@ export class TagsService {
     }
 
     async getTagById(tagId: string) {
-        const tag =
-            await tagsRepository.findById(tagId);
+        const tag = await tagsRepository.findBySlug(tagId);
         if (!tag) throw new HttpError(404, 'Tag not found');
         return tag;
     }

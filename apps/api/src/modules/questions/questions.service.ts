@@ -4,6 +4,7 @@ import { usersRepository } from '../../common/repositories/users.repository';
 import { tagsRepository } from '../../common/repositories/tags.repository';
 import { HttpError } from '../../common/errors/http-error';
 import { resolveVote, reputationFor } from '../../common/services/voting.service';
+import { toQuestionResponse } from './questions.mapper';
 
 const QUESTION_UPVOTE_POINTS = 5;
 const QUESTION_DOWNVOTE_PENALTY = -2;
@@ -13,21 +14,44 @@ export class QuestionsService {
         const page = Math.max(1, parseInt(query.page || '1', 10));
         const limit = Math.max(1, Math.min(100, parseInt(query.limit || '20', 10)));
 
+        let tagId: string | undefined;
+
+        if (query.tag) {
+        const tag = await tagsRepository.findBySlug(query.tag);
+
+        if (!tag) {
+            throw new HttpError(404, "Tag not found");
+        }
+
+        tagId = tag._id.toString();
+}
         const [questions, totalItems] = await Promise.all([
             questionsRepository.list({
                 page,
                 limit,
                 search: query.search,
-                tagId: query.tag,
+                tagId,
                 sort: query.sort
             }),
             questionsRepository.count({
                 search: query.search,
-                tagId: query.tag
+                tagId
             })
         ]);
 
-        return { questions, meta: { currentPage: page, pageSize: limit, totalItems, totalPages: Math.ceil(totalItems / limit) } };
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return {
+            data: questions.map(toQuestionResponse),
+            meta: {
+                page,
+                limit,
+                totalItems,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPreviousPage: page > 1,
+            },
+        };
     }
 
     async createQuestion(authorId: string, data: any) {
@@ -37,11 +61,15 @@ export class QuestionsService {
             (data.tags ?? []).map((name: string) => tagsRepository.findOrCreateByName(name)),
         );
 
-        return questionsRepository.create({
+        const created = await questionsRepository.create({
             ...data,
             tags: tagDocs.map((tag) => tag._id),
             authorId,
         });
+
+        const question = await questionsRepository.findById(created._id.toString());
+
+        return toQuestionResponse(question!);
     }
 
     async getQuestionDetail(questionId: string) {
@@ -54,7 +82,7 @@ export class QuestionsService {
         if (!question)
             throw new HttpError(404, 'Question not found');
 
-        return question;
+        return toQuestionResponse(question);
     }
 
     async updateQuestion(questionId: string, userId: string, userReputation: number, data: any) {
@@ -62,14 +90,16 @@ export class QuestionsService {
         if (!question) throw new HttpError(404, 'Question not found');
 
         // Regra: Apenas o autor ou usuário com rep >= 200 pode editar
-        if (question.authorId.toString() !== userId && userReputation < 200) {
+        if (question.authorId._id.toString() !== userId && userReputation < 200) {
             throw new HttpError(403, 'Forbidden: Not enough reputation to edit');
         }
 
-        return questionsRepository.updateById(
+        const updated = await questionsRepository.updateById(
             questionId,
             data
         );
+
+        return toQuestionResponse(updated!);
     }
 
     async deleteQuestion(questionId: string, userId: string, userRole: string) {
@@ -82,7 +112,7 @@ export class QuestionsService {
                 questionId
             );
         if (userRole !== 'moderator') {
-            if (question.authorId.toString() !== userId) throw new HttpError(403, 'Forbidden: Only author or moderator can delete');
+            if (question.authorId._id.toString() !== userId) throw new HttpError(403, 'Forbidden: Only author or moderator can delete');
             if (hasAnswers) throw new HttpError(403, 'Forbidden: Cannot delete a question that has answers');
         }
 
@@ -101,7 +131,7 @@ export class QuestionsService {
 
         const existingQuestion = await questionsRepository.findById(questionId);
         if (!existingQuestion) throw new HttpError(404, 'Question not found');
-        if (existingQuestion.authorId.toString() === userId) {
+        if (existingQuestion.authorId._id.toString() === userId) {
             throw new HttpError(403, 'You cannot vote on your own question');
         }
 
@@ -119,7 +149,7 @@ export class QuestionsService {
             reputationFor(userVote, QUESTION_UPVOTE_POINTS, QUESTION_DOWNVOTE_PENALTY) -
             reputationFor(previousValue, QUESTION_UPVOTE_POINTS, QUESTION_DOWNVOTE_PENALTY);
         if (repChange !== 0) {
-            await usersRepository.incrementReputation(question.authorId.toString(), repChange);
+            await usersRepository.incrementReputation(question.authorId._id.toString(), repChange);
         }
 
         return { votes: question.voteCount, userVote };
