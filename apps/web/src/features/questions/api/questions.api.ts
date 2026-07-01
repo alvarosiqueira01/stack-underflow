@@ -1,6 +1,32 @@
 import { httpClient } from "@/lib/api/http-client";
 import type { Answer, Comment, Question, VoteValue } from "../types";
 
+export interface PaginatedQuestions {
+  data: Question[];
+  meta: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export interface GetQuestionsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  tag?: string;
+  sort?: string;
+}
+
+export async function getQuestions(params: GetQuestionsParams): Promise<PaginatedQuestions> {
+  const response = await httpClient.get<PaginatedQuestions>("/api/questions", { params });
+
+  return response.data;
+}
+
 export async function getQuestion(questionId: string): Promise<Question> {
   const response = await httpClient.get<Question>(`/api/questions/${questionId}`);
   return response.data;

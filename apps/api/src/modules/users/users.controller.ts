@@ -94,4 +94,34 @@ export class UsersController {
       next(error);
     }
   }
+
+  async getTagPreferences(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user || !req.user.id) {
+        res.status(401).json({ message: 'Unauthorized access' });
+        return;
+      }
+
+      const preferences = await usersService.getTagPreferences(req.user.id);
+      res.status(200).json(preferences);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateTagPreferences(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user || !req.user.id) {
+        res.status(401).json({ message: 'Unauthorized access' });
+        return;
+      }
+
+      const { action } = req.body; // action can be "watch" or "ignore"
+      const updatedPreference = await usersService.updateTagPreferences(req.user.id, req.params.id, action);
+      res.status(200).json(updatedPreference);
+    } catch (error) {
+      next(error);
+    }
+
+  }
 }

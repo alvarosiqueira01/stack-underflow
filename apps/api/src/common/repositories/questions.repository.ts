@@ -30,7 +30,16 @@ export const questionsRepository = {
   },
 
   findById(id: string) {
-    return QuestionModel.findById(id).exec();
+    return QuestionModel.findById(id)
+      .populate({
+        path: "authorId",
+        select: "name username avatarUrl reputation",
+      })
+      .populate({
+        path: "tags",
+        select: "name",
+      })
+      .exec();
   },
 
   list(options: ListQuestionsOptions = {}) {
@@ -60,7 +69,19 @@ export const questionsRepository = {
           ? { updatedAt: -1 }
           : { createdAt: -1 };
 
-    return QuestionModel.find(filter).sort(sort).skip(skip).limit(limit).exec();
+    return QuestionModel.find(filter)
+      .populate({
+        path: "authorId",
+        select: "name username avatarUrl reputation",
+      })
+      .populate({
+        path: "tags",
+        select: "name",
+      })
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .exec();
   },
 
   count(options: Pick<ListQuestionsOptions, "search" | "tagId" | "status" | "authorId"> = {}) {

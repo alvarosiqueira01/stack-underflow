@@ -104,7 +104,7 @@ export class AnswersService {
 
         const questionId = answer.questionId.toString();
         const question = await questionsRepository.findById(questionId);
-        if (!question || question.authorId.toString() !== userId) {
+        if (!question || question.authorId._id.toString() !== userId) {
             throw new HttpError(403, 'Forbidden: Only question author can accept answers');
         }
 

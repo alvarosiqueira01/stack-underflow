@@ -127,6 +127,18 @@ app.post('/api/questions/:id/comments',       authMiddleware, requireReputation(
 app.get('/api/answers/:id/comments',          commentsController.listForAnswer);
 app.post('/api/answers/:id/comments',         authMiddleware, requireReputation(REPUTATION_THRESHOLDS.COMMENT), commentsController.createForAnswer);
 
+// Users
+const usersController = new UsersController();
+
+app.get('/api/users',                         usersController.getUsers);
+app.get('/api/users/:id',                     usersController.getUserById);
+app.put('/api/users/me',                      authMiddleware, usersController.updateMe);
+app.get('/api/users/:id/activity',            usersController.getActivity);
+app.get('/api/users/me/dashboard',            authMiddleware, usersController.getDashboard);
+//User tag preferences
+app.get('/api/tags/preferences',              authMiddleware, usersController.getTagPreferences);
+app.post('/api/tags/:id/preference',          authMiddleware, usersController.updateTagPreferences);
+
 // Tags
 const tagsController = new TagsController();
 
@@ -136,14 +148,6 @@ app.post('/api/tags',                         authMiddleware, requireReputation(
 app.post('/api/users/me/tags/watch',          authMiddleware, tagsController.watchTags);
 app.post('/api/users/me/tags/ignore',         authMiddleware, tagsController.ignoreTags);
 
-// Users
-const usersController = new UsersController();
-
-app.get('/api/users',                         usersController.getUsers);
-app.get('/api/users/:id',                     usersController.getUserById);
-app.put('/api/users/me',                      authMiddleware, usersController.updateMe);
-app.get('/api/users/:id/activity',            usersController.getActivity);
-app.get('/api/users/me/dashboard',            authMiddleware, usersController.getDashboard);
 
 // ── Tratamento de Erros Global ────────────────────────────────────────────────
 app.use(errorMiddleware);

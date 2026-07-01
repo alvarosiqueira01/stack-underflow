@@ -31,7 +31,7 @@ export class QuestionsController {
       if (!questionId) throw new Error('Question id is required');
 
       const question = await questionsService.getQuestionDetail(questionId);
-      res.status(200).json(toQuestionResponse(question));
+      res.status(200).json(question);
     } 
     catch (error) { next(error); }
   }
